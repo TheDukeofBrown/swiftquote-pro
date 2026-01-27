@@ -7,9 +7,9 @@ import { ArrowRight, Zap, FileText, Eye, Brain, Loader2, Droplets, HardHat, Pain
 import { useNavigate } from "react-router-dom";
 import { brands, BrandConfig, platformBrand } from "@/config/brands";
 import type { Database } from "@/integrations/supabase/types";
-import PhoneMockup from "@/components/landing/PhoneMockup";
+import HeroMockup from "@/components/landing/HeroMockup";
 import TradeIconStrip from "@/components/landing/TradeIconStrip";
-import FeatureScreenshotStrip from "@/components/landing/FeatureScreenshotStrip";
+import HowItWorksCards from "@/components/landing/HowItWorksCards";
 import QuotePDFPreview from "@/components/landing/QuotePDFPreview";
 
 type TradeType = Database["public"]["Enums"]["trade_type"];
@@ -44,7 +44,7 @@ const tradeCardCopy: Record<TradeType, { tagline: string; cta: string }> = {
 export default function Index() {
   const { loading: authLoading } = useAuth();
   const { loading: companyLoading } = useCompany();
-  const { brand, selectBrand } = useBrand();
+  const { selectBrand } = useBrand();
   const navigate = useNavigate();
 
   if (authLoading || companyLoading) {
@@ -68,9 +68,6 @@ export default function Index() {
     selectBrand(tradeId);
     navigate("/auth");
   };
-
-  // Get accent color from selected brand
-  const accentHue = brand.primaryHue?.toString() || "220";
 
   return (
     <div className="min-h-screen bg-background">
@@ -123,9 +120,9 @@ export default function Index() {
               </div>
             </div>
             
-            {/* Phone mockup with screenshot */}
+            {/* Phone mockup */}
             <div className="flex justify-center lg:justify-end animate-fade-in" style={{ animationDelay: "0.3s" }}>
-              <PhoneMockup accentColor={accentHue} />
+              <HeroMockup />
             </div>
           </div>
         </div>
@@ -193,8 +190,8 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Feature Screenshot Strip */}
-      <FeatureScreenshotStrip tradeName="trades" />
+      {/* How It Works */}
+      <HowItWorksCards />
 
       {/* Quote PDF Preview */}
       <QuotePDFPreview />
