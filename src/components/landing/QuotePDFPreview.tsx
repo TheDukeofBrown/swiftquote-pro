@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { Check, Droplets } from "lucide-react";
 
 export default function QuotePDFPreview() {
   return (
@@ -18,13 +18,18 @@ export default function QuotePDFPreview() {
               <div className="bg-white rounded-lg shadow-2xl overflow-hidden border border-slate-200">
                 {/* PDF Header */}
                 <div className="bg-primary h-16 px-6 flex items-center justify-between">
-                  <div>
-                    <p className="text-white font-bold text-lg">Thompson Plumbing</p>
-                    <p className="text-white/80 text-xs">07700 900123 • info@thompsonplumbing.co.uk</p>
+                  {/* Logo and company name */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <Droplets className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-bold text-lg">Thompson Plumbing</p>
+                      <p className="text-white/80 text-xs">07700 900123 • info@thompsonplumbing.co.uk</p>
+                    </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-semibold text-sm">QUOTE</p>
-                    <p className="text-white text-lg font-bold">Q-2024-047</p>
+                    <p className="text-white/90 text-xs font-medium">QUOTE</p>
                   </div>
                 </div>
                 
