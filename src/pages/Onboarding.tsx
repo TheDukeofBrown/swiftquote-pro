@@ -46,6 +46,9 @@ const tradeDefaultItems: Record<TradeType, DefaultPriceItem[]> = {
     { name: "Labour rate", type: "labour", unit: "hour", unit_price: 50 },
     { name: "Consumer unit upgrade", type: "service", unit: "each", unit_price: 450 },
     { name: "Socket installation", type: "service", unit: "each", unit_price: 85 },
+    { name: "Lighting point install", type: "service", unit: "each", unit_price: 65 },
+    { name: "EICR (Electrical inspection)", type: "service", unit: "each", unit_price: 180 },
+    { name: "Testing & certification", type: "service", unit: "each", unit_price: 120 },
     { name: "Emergency uplift", type: "uplift", unit: "percent", unit_price: 50 },
   ],
   plasterer: [
