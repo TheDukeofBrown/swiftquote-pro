@@ -3,10 +3,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle, Zap, FileText, Eye, Brain, Loader2, Droplets, HardHat, PaintBucket, Paintbrush, Home } from "lucide-react";
+import { ArrowRight, Zap, FileText, Eye, Brain, Loader2, Droplets, HardHat, PaintBucket, Paintbrush, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { brands, BrandConfig, platformBrand } from "@/config/brands";
 import type { Database } from "@/integrations/supabase/types";
+import HeroMockup from "@/components/landing/HeroMockup";
+import TradeIconStrip from "@/components/landing/TradeIconStrip";
+import HowItWorksCards from "@/components/landing/HowItWorksCards";
+import QuotePDFPreview from "@/components/landing/QuotePDFPreview";
 
 type TradeType = Database["public"]["Enums"]["trade_type"];
 
@@ -40,7 +44,7 @@ const tradeCardCopy: Record<TradeType, { tagline: string; cta: string }> = {
 export default function Index() {
   const { loading: authLoading } = useAuth();
   const { loading: companyLoading } = useCompany();
-  const { brand, selectBrand } = useBrand();
+  const { selectBrand } = useBrand();
   const navigate = useNavigate();
 
   if (authLoading || companyLoading) {
@@ -86,33 +90,49 @@ export default function Index() {
       </header>
 
       {/* Hero */}
-      <section className="py-16 md:py-24">
-        <div className="container text-center max-w-3xl">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in">
-            {platformBrand.name}
-          </h1>
-          <p className="text-xl md:text-2xl font-medium text-foreground mb-4 animate-fade-in" style={{ animationDelay: "0.05s" }}>
-            Professional quotes for trades — in under 60 seconds.
-          </p>
-          <div className="text-lg text-muted-foreground mb-6 animate-fade-in space-y-1" style={{ animationDelay: "0.1s" }}>
-            <p>No paperwork.</p>
-            <p>No spreadsheets.</p>
-            <p>No evenings lost to admin.</p>
-          </div>
-          <p className="text-base text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "0.15s" }}>
-            Built for busy trades who just want to get the job priced and sent.
-          </p>
-          
-          <div className="flex justify-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
-            <Button size="lg" className="px-8" onClick={() => document.getElementById('trade-selector')?.scrollIntoView({ behavior: 'smooth' })}>
-              Choose Your Trade <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+      <section className="py-12 md:py-20 overflow-hidden">
+        <div className="container">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Text content */}
+            <div className="text-center lg:text-left">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 animate-fade-in">
+                {platformBrand.name}
+              </h1>
+              <p className="text-xl md:text-2xl font-medium text-foreground mb-4 animate-fade-in" style={{ animationDelay: "0.05s" }}>
+                Professional quotes for trades — in under 60 seconds.
+              </p>
+              <div className="text-lg text-muted-foreground mb-6 animate-fade-in space-y-1" style={{ animationDelay: "0.1s" }}>
+                <p>No paperwork. No spreadsheets. No evenings lost to admin.</p>
+              </div>
+              <p className="text-base text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "0.15s" }}>
+                Built for busy trades who just want to get the job priced and sent.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-in" style={{ animationDelay: "0.2s" }}>
+                <Button size="lg" className="px-8" onClick={() => document.getElementById('trade-selector')?.scrollIntoView({ behavior: 'smooth' })}>
+                  Choose Your Trade <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+                <Link to="/auth">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                    Login
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            
+            {/* Phone mockup */}
+            <div className="flex justify-center lg:justify-end animate-fade-in" style={{ animationDelay: "0.3s" }}>
+              <HeroMockup />
+            </div>
           </div>
         </div>
       </section>
 
+      {/* Trade Icon Strip */}
+      <TradeIconStrip />
+
       {/* Sub-Hero (Clarity) */}
-      <section className="py-12 bg-muted/30">
+      <section className="py-12">
         <div className="container text-center max-w-2xl">
           <p className="text-lg md:text-xl text-foreground mb-4">
             Quoting shouldn't slow your business down.
@@ -127,7 +147,7 @@ export default function Index() {
       </section>
 
       {/* Trade Selector */}
-      <section id="trade-selector" className="py-16">
+      <section id="trade-selector" className="py-16 bg-muted/30">
         <div className="container">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">One platform. Trade-specific quoting tools.</h2>
@@ -170,8 +190,14 @@ export default function Index() {
         </div>
       </section>
 
+      {/* How It Works */}
+      <HowItWorksCards />
+
+      {/* Quote PDF Preview */}
+      <QuotePDFPreview />
+
       {/* Features */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-16">
         <div className="container">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Why trades use WorkQuote</h2>
@@ -213,36 +239,6 @@ export default function Index() {
                 Defaults, language, and pricing that match your work.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="py-16">
-        <div className="container">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">How it works</h2>
-          </div>
-          <div className="max-w-2xl mx-auto">
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">1</div>
-                <p className="text-lg">Choose your trade</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">2</div>
-                <p className="text-lg">Set your prices once</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">3</div>
-                <p className="text-lg">Build and send quotes on site</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">4</div>
-                <p className="text-lg">Get accepted faster</p>
-              </div>
-            </div>
-            <p className="text-center text-muted-foreground mt-8 text-lg font-medium">That's it.</p>
           </div>
         </div>
       </section>
