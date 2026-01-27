@@ -4,11 +4,14 @@ import { useCompany } from "./CompanyContext";
 import { 
   SubscriptionPlan, 
   SubscriptionStatus, 
+  PlanTier,
   PLAN_LIMITS, 
   canUseFeature, 
   isWithinLimit,
   isSubscriptionActive,
   isReadOnlyMode,
+  planToTier,
+  getTrialDaysRemaining,
   PlanLimits
 } from "@/config/plans";
 
@@ -17,6 +20,8 @@ interface Subscription {
   company_id: string;
   plan: SubscriptionPlan;
   status: SubscriptionStatus;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
   trial_ends_at: string | null;
   current_period_start: string | null;
   current_period_end: string | null;
@@ -36,21 +41,21 @@ interface SubscriptionContextType {
   
   // Plan info
   plan: SubscriptionPlan;
+  tier: PlanTier;
   isActive: boolean;
   isReadOnly: boolean;
   isTrialing: boolean;
   trialDaysRemaining: number;
+  hasStripeSubscription: boolean;
   
   // Feature checks
   canUse: (feature: keyof PlanLimits["features"]) => boolean;
   canCreateQuote: () => boolean;
-  canDownloadPdf: () => boolean;
+  canSendQuote: () => boolean;
   
   // Usage info
   quotesUsed: number;
   quotesLimit: number;
-  pdfsUsed: number;
-  pdfsLimit: number;
   
   // Actions
   refetch: () => Promise<void>;
@@ -85,7 +90,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       console.error("Error fetching subscription:", subError);
     }
     
-    // Cast the data to our expected type
     if (subData) {
       setSubscription({
         ...subData,
@@ -119,37 +123,33 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   // Computed values
   const plan = subscription?.plan || "free";
+  const tier = planToTier(plan);
   const status = subscription?.status || "trialing";
   const isActive = isSubscriptionActive(status);
   const isReadOnly = isReadOnlyMode(status);
   const isTrialing = status === "trialing";
-  
-  // Calculate trial days remaining
-  const trialDaysRemaining = subscription?.trial_ends_at
-    ? Math.max(0, Math.ceil((new Date(subscription.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : 0;
+  const trialDaysRemaining = getTrialDaysRemaining(subscription?.trial_ends_at || null);
+  const hasStripeSubscription = !!subscription?.stripe_subscription_id;
 
   // Usage values
   const quotesUsed = usage?.quotes_created_this_month || 0;
-  const pdfsUsed = usage?.pdfs_generated_this_month || 0;
-  const limits = PLAN_LIMITS[plan];
+  const limits = PLAN_LIMITS[tier];
   const quotesLimit = limits.quotesPerMonth;
-  const pdfsLimit = limits.pdfDownloads;
 
   // Feature check functions
   const canUse = (feature: keyof PlanLimits["features"]) => {
     if (!isActive) return false;
-    return canUseFeature(plan, feature);
+    return canUseFeature(tier, feature);
   };
 
   const canCreateQuote = () => {
     if (!isActive) return false;
-    return isWithinLimit(plan, "quotesPerMonth", quotesUsed);
+    return isWithinLimit(tier, "quotesPerMonth", quotesUsed);
   };
 
-  const canDownloadPdf = () => {
+  const canSendQuote = () => {
     if (!isActive) return false;
-    return isWithinLimit(plan, "pdfDownloads", pdfsUsed);
+    return true; // Sending is unlimited for all plans
   };
 
   return (
@@ -158,17 +158,17 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       usage,
       loading,
       plan,
+      tier,
       isActive,
       isReadOnly,
       isTrialing,
       trialDaysRemaining,
+      hasStripeSubscription,
       canUse,
       canCreateQuote,
-      canDownloadPdf,
+      canSendQuote,
       quotesUsed,
       quotesLimit,
-      pdfsUsed,
-      pdfsLimit,
       refetch: fetchSubscription,
     }}>
       {children}

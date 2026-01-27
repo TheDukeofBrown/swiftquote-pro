@@ -16,6 +16,7 @@ import QuoteBuilder from "./pages/QuoteBuilder";
 import QuotesList from "./pages/QuotesList";
 import QuoteDetail from "./pages/QuoteDetail";
 import Settings from "./pages/Settings";
+import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -86,6 +87,14 @@ const App = () => (
                     element={
                       <ProtectedRoute requireCompany>
                         <Settings />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/billing"
+                    element={
+                      <ProtectedRoute requireCompany>
+                        <Billing />
                       </ProtectedRoute>
                     }
                   />

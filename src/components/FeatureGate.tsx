@@ -16,7 +16,7 @@ interface FeatureGateProps {
  * Otherwise shows an upgrade prompt.
  */
 export function FeatureGate({ feature, children, fallback }: FeatureGateProps) {
-  const { canUse, plan } = useSubscription();
+  const { canUse } = useSubscription();
   
   if (canUse(feature)) {
     return <>{children}</>;
@@ -33,7 +33,7 @@ export function FeatureGate({ feature, children, fallback }: FeatureGateProps) {
         <p className="text-sm text-muted-foreground mb-3">
           This feature requires an upgrade
         </p>
-        <Link to="/settings?tab=billing">
+        <Link to="/billing">
           <Button size="sm" variant="outline">
             Upgrade Plan
           </Button>
@@ -44,7 +44,7 @@ export function FeatureGate({ feature, children, fallback }: FeatureGateProps) {
 }
 
 interface UsageLimitGateProps {
-  type: "quote" | "pdf";
+  type: "quote";
   children: React.ReactNode;
   onLimitReached?: () => void;
 }
@@ -53,13 +53,13 @@ interface UsageLimitGateProps {
  * Renders children only if within usage limits.
  * Shows limit reached message otherwise.
  */
-export function UsageLimitGate({ type, children, onLimitReached }: UsageLimitGateProps) {
-  const { canCreateQuote, canDownloadPdf, quotesUsed, quotesLimit, pdfsUsed, pdfsLimit, plan } = useSubscription();
+export function UsageLimitGate({ type, children }: UsageLimitGateProps) {
+  const { canCreateQuote, quotesUsed, quotesLimit, tier } = useSubscription();
   
-  const canProceed = type === "quote" ? canCreateQuote() : canDownloadPdf();
-  const used = type === "quote" ? quotesUsed : pdfsUsed;
-  const limit = type === "quote" ? quotesLimit : pdfsLimit;
-  const label = type === "quote" ? "quotes" : "PDF downloads";
+  const canProceed = canCreateQuote();
+  const used = quotesUsed;
+  const limit = quotesLimit;
+  const label = "quotes";
   
   if (canProceed) {
     return <>{children}</>;
@@ -71,9 +71,9 @@ export function UsageLimitGate({ type, children, onLimitReached }: UsageLimitGat
         <AlertTriangle className="w-8 h-8 text-warning mx-auto mb-3" />
         <p className="font-medium mb-1">Monthly limit reached</p>
         <p className="text-sm text-muted-foreground mb-4">
-          You've used {used} of {limit} {label} this month
+          You've used {used} of {limit === -1 ? "unlimited" : limit} {label} this month
         </p>
-        <Link to="/settings?tab=billing">
+        <Link to="/billing">
           <Button size="sm">
             Upgrade for More
           </Button>
@@ -104,13 +104,14 @@ export function ReadOnlyGuard({ children }: ReadOnlyGuardProps) {
           <div className="flex items-center gap-2 text-destructive">
             <AlertTriangle className="w-4 h-4" />
             <span className="text-sm font-medium">
-              Your subscription has {subscription?.status === "past_due" ? "payment issues" : "expired"}. 
-              Your account is in read-only mode.
+              {subscription?.status === "past_due" 
+                ? "Your payment failed. Please update your billing to continue." 
+                : "Your subscription has expired. Subscribe to create new quotes."}
             </span>
           </div>
-          <Link to="/settings?tab=billing">
+          <Link to="/billing">
             <Button size="sm" variant="destructive">
-              Update Billing
+              {subscription?.status === "past_due" ? "Update Billing" : "Subscribe"}
             </Button>
           </Link>
         </div>
