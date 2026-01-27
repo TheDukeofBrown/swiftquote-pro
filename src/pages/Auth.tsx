@@ -56,7 +56,7 @@ export default function Auth() {
       if (type === "signup") {
         toast({
           title: "Account created!",
-          description: "Welcome to QuoteForge. Let's set up your business.",
+          description: "Welcome to QuoteTrack. Let's set up your business.",
         });
       }
       
@@ -80,7 +80,7 @@ export default function Auth() {
             <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
               <FileText className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold text-foreground">QuoteForge</span>
+            <span className="text-2xl font-bold text-foreground">QuoteTrack</span>
           </Link>
           <p className="text-muted-foreground">Professional quotes in under 60 seconds</p>
         </div>
