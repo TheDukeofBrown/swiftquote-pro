@@ -3,12 +3,15 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
 import { useBrand } from "@/contexts/BrandContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import BrandLogo from "@/components/BrandLogo";
+import { UsageDisplay } from "@/components/UsageDisplay";
+import { ReadOnlyGuard } from "@/components/FeatureGate";
 import {
   FileText,
   Plus,
@@ -20,6 +23,7 @@ import {
   Send,
   Settings,
   LogOut,
+  AlertTriangle,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -38,6 +42,7 @@ export default function Dashboard() {
   const { signOut } = useAuth();
   const { company } = useCompany();
   const { brand } = useBrand();
+  const { canCreateQuote, isTrialing, trialDaysRemaining, isReadOnly } = useSubscription();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -134,6 +139,21 @@ export default function Dashboard() {
       </header>
 
       <main className="container py-6 space-y-6">
+        {/* Trial Banner */}
+        {isTrialing && trialDaysRemaining > 0 && trialDaysRemaining <= 7 && (
+          <div className="bg-warning/10 border border-warning/20 rounded-lg px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-warning">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="text-sm font-medium">
+                Your trial ends in {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""}
+              </span>
+            </div>
+            <Link to="/settings?tab=billing">
+              <Button size="sm" variant="outline">Upgrade Now</Button>
+            </Link>
+          </div>
+        )}
+
         {/* Quick action */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -141,7 +161,7 @@ export default function Dashboard() {
             <p className="text-muted-foreground">Welcome back, here's your overview</p>
           </div>
           <Link to="/quotes/new">
-            <Button size="lg" className="w-full sm:w-auto">
+            <Button size="lg" className="w-full sm:w-auto" disabled={isReadOnly || !canCreateQuote()}>
               <Plus className="w-4 h-4 mr-2" />
               New Quote
             </Button>

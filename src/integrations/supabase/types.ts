@@ -228,15 +228,119 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          canceled_at: string | null
+          company_id: string
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan: Database["public"]["Enums"]["subscription_plan"]
+          status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          canceled_at?: string | null
+          company_id: string
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          canceled_at?: string | null
+          company_id?: string
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usage_records: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          pdfs_generated_this_month: number
+          period_start: string
+          quotes_created_this_month: number
+          quotes_sent_this_month: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          pdfs_generated_this_month?: number
+          period_start?: string
+          quotes_created_this_month?: number
+          quotes_sent_this_month?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          pdfs_generated_this_month?: number
+          period_start?: string
+          quotes_created_this_month?: number
+          quotes_sent_this_month?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_records_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_usage: {
+        Args: { p_company_id: string; p_metric: string }
+        Returns: boolean
+      }
     }
     Enums: {
       quote_status: "draft" | "sent" | "viewed" | "accepted" | "declined"
+      subscription_plan: "free" | "pro" | "business"
+      subscription_status:
+        | "trialing"
+        | "active"
+        | "past_due"
+        | "canceled"
+        | "expired"
       trade_type: "builder" | "plumber" | "electrician" | "plasterer"
     }
     CompositeTypes: {
@@ -366,6 +470,14 @@ export const Constants = {
   public: {
     Enums: {
       quote_status: ["draft", "sent", "viewed", "accepted", "declined"],
+      subscription_plan: ["free", "pro", "business"],
+      subscription_status: [
+        "trialing",
+        "active",
+        "past_due",
+        "canceled",
+        "expired",
+      ],
       trade_type: ["builder", "plumber", "electrician", "plasterer"],
     },
   },
