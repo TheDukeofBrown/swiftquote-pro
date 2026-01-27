@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { UsageDisplay } from "@/components/UsageDisplay";
+import { LogoUpload } from "@/components/LogoUpload";
 import { PLANS, getPlanInfo } from "@/config/plans";
 import { ArrowLeft, Loader2, Save, LogOut, Check, Crown, Zap, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -138,13 +139,18 @@ export default function Settings() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="businessName">Business Name</Label>
-                  <Input
-                    id="businessName"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                  />
+                {/* Logo Upload */}
+                <LogoUpload />
+                
+                <div className="border-t border-border pt-4 mt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="businessName">Business Name</Label>
+                    <Input
+                      id="businessName"
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                    />
+                  </div>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">

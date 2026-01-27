@@ -128,8 +128,26 @@ Deno.serve(async (req) => {
       p_metric: "pdfs_generated" 
     });
 
+    // Fetch logo if available
+    let logoBase64: string | null = null;
+    if (company.logo_url) {
+      try {
+        const logoResponse = await fetch(company.logo_url);
+        if (logoResponse.ok) {
+          const logoBlob = await logoResponse.arrayBuffer();
+          const base64 = btoa(
+            new Uint8Array(logoBlob).reduce((data, byte) => data + String.fromCharCode(byte), "")
+          );
+          const contentType = logoResponse.headers.get("content-type") || "image/png";
+          logoBase64 = `data:${contentType};base64,${base64}`;
+        }
+      } catch (logoErr) {
+        console.error("Failed to fetch logo:", logoErr);
+      }
+    }
+
     // Generate PDF
-    const pdf = generateQuotePDF(quote, company, items || []);
+    const pdf = generateQuotePDF(quote, company, items || [], logoBase64);
     const pdfBytes = pdf.output("arraybuffer");
 
     console.log(`PDF generated for quote ${quote.reference}`);
@@ -150,7 +168,7 @@ Deno.serve(async (req) => {
   }
 });
 
-function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[]): jsPDF {
+function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[], logoBase64: string | null): jsPDF {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -184,11 +202,25 @@ function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[]): j
   doc.setFillColor(...brandColor);
   doc.rect(0, 0, pageWidth, 40, "F");
 
+  // Add logo if available
+  let textStartX = margin;
+  if (logoBase64) {
+    try {
+      // Add logo - white background circle for visibility
+      doc.setFillColor(255, 255, 255);
+      doc.circle(margin + 12, 20, 14, "F");
+      doc.addImage(logoBase64, "PNG", margin + 2, 8, 20, 24, undefined, "FAST");
+      textStartX = margin + 28;
+    } catch (e) {
+      console.error("Failed to add logo to PDF:", e);
+    }
+  }
+
   // Company name in header (large, prominent)
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
-  doc.text(company.business_name, margin, 18);
+  doc.text(company.business_name, textStartX, 18);
 
   // Company contact details under name
   doc.setFontSize(9);
@@ -197,7 +229,7 @@ function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[]): j
   if (company.phone) contactLine += company.phone;
   if (company.email) contactLine += (contactLine ? "  •  " : "") + company.email;
   if (contactLine) {
-    doc.text(contactLine, margin, 28);
+    doc.text(contactLine, textStartX, 28);
   }
 
   // Quote reference on right
