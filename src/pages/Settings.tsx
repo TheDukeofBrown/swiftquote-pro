@@ -15,8 +15,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { UsageDisplay } from "@/components/UsageDisplay";
 import { LogoUpload } from "@/components/LogoUpload";
+import { PriceLibrarySettings } from "@/components/PriceLibrarySettings";
 import { PLANS, getPlanInfo } from "@/config/plans";
-import { ArrowLeft, Loader2, Save, LogOut, Check, Crown, Zap, Clock } from "lucide-react";
+import { ArrowLeft, Loader2, Save, LogOut, Check, Crown, Zap, Clock, Library } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Settings() {
@@ -113,7 +114,11 @@ export default function Settings() {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="business">Business</TabsTrigger>
-            <TabsTrigger value="billing">Billing & Plan</TabsTrigger>
+            <TabsTrigger value="library" className="gap-1">
+              <Library className="w-4 h-4" />
+              Price Library
+            </TabsTrigger>
+            <TabsTrigger value="billing">Billing</TabsTrigger>
             <TabsTrigger value="account">Account</TabsTrigger>
           </TabsList>
 
@@ -224,6 +229,11 @@ export default function Settings() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Price Library Tab */}
+          <TabsContent value="library">
+            <PriceLibrarySettings />
           </TabsContent>
 
           {/* Billing Tab */}
