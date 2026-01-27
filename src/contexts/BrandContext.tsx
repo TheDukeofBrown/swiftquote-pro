@@ -1,13 +1,17 @@
-import { createContext, useContext, useEffect, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useCompany } from "./CompanyContext";
-import { getBrandByTrade, BrandConfig, defaultBrand } from "@/config/brands";
+import { getBrandByTrade, BrandConfig, defaultBrand, brands } from "@/config/brands";
 import type { Database } from "@/integrations/supabase/types";
 
 type TradeType = Database["public"]["Enums"]["trade_type"];
 
+const STORAGE_KEY = "selectedBrandId";
+
 interface BrandContextType {
   brand: BrandConfig | typeof defaultBrand;
   isTradeSpecific: boolean;
+  selectBrand: (tradeId: TradeType) => void;
+  clearManualBrand: () => void;
 }
 
 const BrandContext = createContext<BrandContextType | undefined>(undefined);
@@ -27,19 +31,63 @@ function applyBrandTheme(primaryHue: number, accentHue: number) {
   root.style.setProperty("--ring", `${primaryHue} 70% 45%`);
 }
 
+function getStoredBrandId(): TradeType | null {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored && (stored === "plumber" || stored === "electrician" || stored === "plasterer" || stored === "builder")) {
+      return stored as TradeType;
+    }
+  } catch {
+    // localStorage not available
+  }
+  return null;
+}
+
+function setStoredBrandId(tradeId: TradeType | null) {
+  try {
+    if (tradeId) {
+      localStorage.setItem(STORAGE_KEY, tradeId);
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  } catch {
+    // localStorage not available
+  }
+}
+
 export function BrandProvider({ children }: { children: ReactNode }) {
   const { company } = useCompany();
+  const [manualBrandId, setManualBrandId] = useState<TradeType | null>(() => getStoredBrandId());
   
+  // Company trade takes precedence over manual selection
   const trade = company?.trade as TradeType | null;
-  const brand = getBrandByTrade(trade);
+  const effectiveTrade = trade || manualBrandId;
+  const brand = effectiveTrade ? brands[effectiveTrade] : defaultBrand;
   const isTradeSpecific = brand.id !== null;
+
+  const selectBrand = (tradeId: TradeType) => {
+    setManualBrandId(tradeId);
+    setStoredBrandId(tradeId);
+  };
+
+  const clearManualBrand = () => {
+    setManualBrandId(null);
+    setStoredBrandId(null);
+  };
+
+  // Clear manual brand when user has a company (their real trade takes over)
+  useEffect(() => {
+    if (company?.trade) {
+      clearManualBrand();
+    }
+  }, [company?.trade]);
 
   useEffect(() => {
     applyBrandTheme(brand.primaryHue, brand.accentHue);
   }, [brand.primaryHue, brand.accentHue]);
 
   return (
-    <BrandContext.Provider value={{ brand, isTradeSpecific }}>
+    <BrandContext.Provider value={{ brand, isTradeSpecific, selectBrand, clearManualBrand }}>
       {children}
     </BrandContext.Provider>
   );
