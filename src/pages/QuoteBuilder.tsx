@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useCompany } from "@/contexts/CompanyContext";
+import { useBrand } from "@/contexts/BrandContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,9 +17,7 @@ import {
   Loader2,
   Save,
   Send,
-  FileText,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 
 type QuoteItem = {
@@ -32,25 +31,13 @@ type QuoteItem = {
   sort_order: number;
 };
 
-const defaultLabourItems: Record<string, QuoteItem[]> = {
-  builder: [
-    { description: "Site preparation and clearance", item_type: "labour", quantity: 8, unit_price: 45, markup_percent: 0, line_total: 360, sort_order: 0 },
-  ],
-  plumber: [
-    { description: "Plumbing installation labour", item_type: "labour", quantity: 4, unit_price: 50, markup_percent: 0, line_total: 200, sort_order: 0 },
-  ],
-  electrician: [
-    { description: "Electrical installation labour", item_type: "labour", quantity: 4, unit_price: 55, markup_percent: 0, line_total: 220, sort_order: 0 },
-  ],
-  plasterer: [
-    { description: "Plastering labour", item_type: "labour", quantity: 6, unit_price: 40, markup_percent: 0, line_total: 240, sort_order: 0 },
-  ],
-};
+// Removed - now using brand config for default items
 
 export default function QuoteBuilder() {
   const navigate = useNavigate();
   const { id } = useParams();
   const { company } = useCompany();
+  const { brand } = useBrand();
   const { toast } = useToast();
   
   const isEditing = !!id;
@@ -74,17 +61,20 @@ export default function QuoteBuilder() {
   useEffect(() => {
     if (id) {
       loadQuote(id);
-    } else if (company) {
-      // Set default items based on trade
-      const tradeItems = defaultLabourItems[company.trade] || [];
-      const itemsWithRate = tradeItems.map(item => ({
-        ...item,
-        unit_price: Number(company.default_labour_rate) || item.unit_price,
-        line_total: item.quantity * (Number(company.default_labour_rate) || item.unit_price),
+    } else if (company && brand.id) {
+      // Set default items based on brand config
+      const defaultItems = brand.defaultItems.slice(0, 1).map((item, index) => ({
+        description: item.description,
+        item_type: item.itemType === "labour" ? "labour" as const : "materials" as const,
+        quantity: 1,
+        unit_price: Number(company.default_labour_rate) || item.unitPrice,
+        markup_percent: 0,
+        line_total: Number(company.default_labour_rate) || item.unitPrice,
+        sort_order: index,
       }));
-      setItems(itemsWithRate.length > 0 ? itemsWithRate : [createEmptyItem(0)]);
+      setItems(defaultItems.length > 0 ? defaultItems : [createEmptyItem(0)]);
     }
-  }, [id, company]);
+  }, [id, company, brand]);
 
   const loadQuote = async (quoteId: string) => {
     setLoading(true);
