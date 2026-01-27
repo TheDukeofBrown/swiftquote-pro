@@ -155,16 +155,24 @@ export default function QuoteDetail() {
         throw new Error("Not authenticated");
       }
 
-      const response = await supabase.functions.invoke("generate-pdf", {
-        body: { quoteId: quote.id },
+      // Use fetch directly since we need binary response
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/generate-pdf`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+          "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ quoteId: quote.id }),
       });
 
-      if (response.error) {
-        throw new Error(response.error.message || "Failed to generate PDF");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to generate PDF");
       }
 
-      // The response data is already the PDF blob
-      const blob = new Blob([response.data], { type: "application/pdf" });
+      const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
