@@ -4,7 +4,7 @@ import { useCompany } from "@/contexts/CompanyContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { Button } from "@/components/ui/button";
 import BrandLogo from "@/components/BrandLogo";
-import { ArrowRight, CheckCircle, Zap, Shield, Loader2, Droplets, HardHat, PaintBucket } from "lucide-react";
+import { ArrowRight, CheckCircle, Zap, Shield, Loader2, Droplets, HardHat, PaintBucket, Paintbrush, Home } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { brands, BrandConfig } from "@/config/brands";
@@ -17,6 +17,8 @@ const tradeHeroSubtext: Record<TradeType, string> = {
   electrician: "Built for busy electricians. Professional quotes for installations, testing, and compliance.",
   plasterer: "Built for busy plasterers. Clean, simple quotes for room skims and day rates.",
   builder: "Built for busy builders. Multi-line quotes without spreadsheets.",
+  painter: "Built for painters & decorators. Fast quotes for rooms, prep, and materials.",
+  roofer: "Built for busy roofers. Quote repairs, replacements, and scaffolding in seconds.",
 };
 
 const genericSubtext = "Built for builders, plumbers, electricians, and plasterers.";
@@ -47,6 +49,8 @@ export default function Index() {
     { ...brands.electrician, Icon: Zap },
     { ...brands.plasterer, Icon: PaintBucket },
     { ...brands.builder, Icon: HardHat },
+    { ...brands.painter, Icon: Paintbrush },
+    { ...brands.roofer, Icon: Home },
   ];
 
   const handleSelectTrade = (tradeId: TradeType) => {
@@ -156,7 +160,7 @@ export default function Index() {
       <section className="py-16">
         <div className="container">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">One Platform, Four Brands</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">One Platform, Six Brands</h2>
             <p className="text-muted-foreground">
               Choose your trade and get a fully branded quoting experience
             </p>

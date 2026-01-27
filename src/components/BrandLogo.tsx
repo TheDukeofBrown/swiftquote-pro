@@ -1,5 +1,5 @@
 import { forwardRef } from "react";
-import { FileText, Droplets, Zap, PaintBucket, HardHat } from "lucide-react";
+import { FileText, Droplets, Zap, PaintBucket, HardHat, Paintbrush, Home } from "lucide-react";
 import { useBrand } from "@/contexts/BrandContext";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,8 @@ const iconMap = {
   Zap,
   PaintBucket,
   HardHat,
+  Paintbrush,
+  Home,
 };
 
 const sizeClasses = {
