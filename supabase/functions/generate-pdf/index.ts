@@ -161,8 +161,8 @@ function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[]): j
   const tradeColors: Record<string, [number, number, number]> = {
     plumber: [56, 189, 248], // Blue
     electrician: [59, 130, 246], // Navy / Electric blue
-    plasterer: [251, 146, 60], // Orange/Terracotta
-    builder: [100, 116, 139], // Slate
+    plasterer: [100, 116, 139], // Neutral grey / Slate
+    builder: [71, 85, 105], // Dark slate
   };
   const brandColor = tradeColors[company.trade] || [100, 116, 139];
 

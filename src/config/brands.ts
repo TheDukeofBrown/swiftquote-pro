@@ -67,23 +67,23 @@ export const brands: Record<TradeType, BrandConfig> = {
   plasterer: {
     id: "plasterer",
     name: "PlasterQuote",
-    tagline: "Smooth quotes for smooth finishes",
-    description: "Fast, accurate plastering quotes for professionals",
-    primaryHue: 25, // Warm terracotta
-    accentHue: 15,
+    tagline: "Clear, simple plastering quotes in under 60 seconds",
+    description: "Built for busy plasterers who'd rather be on-site than doing paperwork",
+    primaryHue: 240, // Neutral grey / slate
+    accentHue: 220, // Soft blue-grey
     icon: "PaintBucket",
     features: [
-      "Room size calculators",
-      "Rendering estimates",
-      "Skimming templates",
+      "Room skims & day rates",
+      "Clean, simple pricing",
+      "No jargon, just quotes",
     ],
     defaultLabourRate: 40,
     defaultItems: [
-      { description: "Room plastering (per sq metre)", unitPrice: 18, itemType: "labour" },
-      { description: "Ceiling skim", unitPrice: 280, itemType: "labour" },
-      { description: "Artex removal (per sq metre)", unitPrice: 25, itemType: "labour" },
-      { description: "External render (per sq metre)", unitPrice: 45, itemType: "labour" },
-      { description: "Plaster (25kg bag)", unitPrice: 8, itemType: "material" },
+      { description: "Day rate", unitPrice: 200, itemType: "labour" },
+      { description: "Room skim (walls)", unitPrice: 280, itemType: "labour" },
+      { description: "Ceiling skim", unitPrice: 180, itemType: "labour" },
+      { description: "Patch repair", unitPrice: 85, itemType: "labour" },
+      { description: "Materials allowance", unitPrice: 50, itemType: "material" },
     ],
   },
   builder: {

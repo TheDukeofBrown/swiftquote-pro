@@ -53,10 +53,10 @@ const tradeDefaultItems: Record<TradeType, DefaultPriceItem[]> = {
   ],
   plasterer: [
     { name: "Day rate", type: "labour", unit: "day", unit_price: 200 },
-    { name: "Labour rate", type: "labour", unit: "hour", unit_price: 40 },
-    { name: "Room plastering (per sqm)", type: "service", unit: "metre", unit_price: 18 },
-    { name: "Ceiling skim", type: "service", unit: "each", unit_price: 280 },
-    { name: "Weekend uplift", type: "uplift", unit: "percent", unit_price: 25 },
+    { name: "Room skim (walls)", type: "service", unit: "each", unit_price: 280 },
+    { name: "Ceiling skim", type: "service", unit: "each", unit_price: 180 },
+    { name: "Patch repair", type: "service", unit: "each", unit_price: 85 },
+    { name: "Materials allowance", type: "material", unit: "each", unit_price: 50 },
   ],
   builder: [
     { name: "Day rate (labourer)", type: "labour", unit: "day", unit_price: 150 },
