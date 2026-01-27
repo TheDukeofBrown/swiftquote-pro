@@ -17,6 +17,7 @@ import QuotesList from "./pages/QuotesList";
 import QuoteDetail from "./pages/QuoteDetail";
 import Settings from "./pages/Settings";
 import Billing from "./pages/Billing";
+import QuoteView from "./pages/QuoteView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -98,6 +99,8 @@ const App = () => (
                       </ProtectedRoute>
                     }
                   />
+                  {/* Public quote view - no auth required */}
+                  <Route path="/q/:quoteId" element={<QuoteView />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </SubscriptionProvider>
