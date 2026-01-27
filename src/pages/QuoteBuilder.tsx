@@ -51,6 +51,7 @@ export default function QuoteBuilder() {
   const [saving, setSaving] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
   const [jobAddress, setJobAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<QuoteItem[]>([]);
@@ -434,13 +435,25 @@ export default function QuoteBuilder() {
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="customerEmail" className="text-xs">Email</Label>
+                <Label htmlFor="customerEmail" className="text-xs">Email *</Label>
                 <Input
                   id="customerEmail"
                   type="email"
                   placeholder="customer@example.com"
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="customerPhone" className="text-xs">Phone</Label>
+                <Input
+                  id="customerPhone"
+                  type="tel"
+                  placeholder="e.g. 07700 900123"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
                 />
               </div>
             </div>
