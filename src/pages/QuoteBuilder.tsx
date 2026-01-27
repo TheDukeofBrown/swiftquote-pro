@@ -302,7 +302,7 @@ export default function QuoteBuilder() {
       });
 
       if (sendAfterSave) {
-        navigate(`/quotes/${currentQuoteId}`);
+        navigate(`/quotes/${currentQuoteId}/sent`);
       }
     } catch (err: any) {
       console.error("Save error:", err);
