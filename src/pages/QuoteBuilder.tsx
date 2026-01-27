@@ -385,7 +385,7 @@ export default function QuoteBuilder() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-3 gap-2 sm:col-span-4">
+                <div className="grid grid-cols-[1fr_1.5fr_1.5fr] gap-2 sm:col-span-5">
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">Qty</Label>
                     <Input
@@ -402,13 +402,14 @@ export default function QuoteBuilder() {
                       type="number"
                       min="0"
                       step="0.01"
+                      className="min-w-[100px]"
                       value={item.unit_price}
                       onChange={(e) => updateItem(index, { unit_price: parseFloat(e.target.value) || 0 })}
                     />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">Total</Label>
-                    <div className="h-9 px-3 flex items-center bg-muted rounded-md font-medium text-sm">
+                    <div className="h-9 px-3 flex items-center bg-muted rounded-md font-medium text-sm whitespace-nowrap">
                       {formatCurrency(item.line_total)}
                     </div>
                   </div>
