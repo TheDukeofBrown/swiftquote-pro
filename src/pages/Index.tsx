@@ -14,7 +14,7 @@ type TradeType = Database["public"]["Enums"]["trade_type"];
 
 const tradeHeroSubtext: Record<TradeType, string> = {
   plumber: "Built for busy plumbers who want to quote faster and win more jobs.",
-  electrician: "Built for sparks who need professional quotes on the go.",
+  electrician: "Built for busy electricians. Professional quotes for installations, testing, and compliance.",
   plasterer: "Built for plasterers who'd rather be on-site than doing paperwork.",
   builder: "Built for builders who want to spend less time quoting and more time building.",
 };

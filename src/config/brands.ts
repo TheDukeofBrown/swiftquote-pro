@@ -45,15 +45,15 @@ export const brands: Record<TradeType, BrandConfig> = {
   electrician: {
     id: "electrician",
     name: "SparkQuote",
-    tagline: "Electrical quotes that spark confidence",
-    description: "Professional electrical quoting for certified sparks",
-    primaryHue: 45, // Amber/Yellow
-    accentHue: 35,
+    tagline: "Professional electrical quotes in under 60 seconds",
+    description: "Built for busy electricians who need professional quotes on the go",
+    primaryHue: 220, // Navy / Electric blue
+    accentHue: 45, // Yellow accent
     icon: "Zap",
     features: [
-      "Rewiring calculators",
+      "Installations & rewiring",
       "Testing & certification",
-      "Consumer unit quotes",
+      "Compliance documentation",
     ],
     defaultLabourRate: 50,
     defaultItems: [

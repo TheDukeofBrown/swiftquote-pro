@@ -157,11 +157,11 @@ function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[]): j
   const margin = 20;
   let y = margin;
 
-  // Brand colors by trade
+  // Brand colors by trade (RGB values matching brand hues)
   const tradeColors: Record<string, [number, number, number]> = {
     plumber: [56, 189, 248], // Blue
-    electrician: [251, 191, 36], // Amber
-    plasterer: [251, 146, 60], // Orange
+    electrician: [59, 130, 246], // Navy / Electric blue
+    plasterer: [251, 146, 60], // Orange/Terracotta
     builder: [100, 116, 139], // Slate
   };
   const brandColor = tradeColors[company.trade] || [100, 116, 139];
