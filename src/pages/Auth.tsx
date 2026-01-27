@@ -62,8 +62,10 @@ export default function Auth() {
           description: `Welcome to ${brand.name}. Let's set up your business.`,
         });
       }
-      
-      navigate("/");
+
+      // Send users into the app flow.
+      // If they don't have a company yet, /dashboard will route them to /onboarding.
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       toast({
         title: "Error",
