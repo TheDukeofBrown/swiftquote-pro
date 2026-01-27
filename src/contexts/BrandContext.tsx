@@ -34,7 +34,8 @@ function applyBrandTheme(primaryHue: number, accentHue: number) {
 function getStoredBrandId(): TradeType | null {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && (stored === "plumber" || stored === "electrician" || stored === "plasterer" || stored === "builder")) {
+    const validTrades = ["plumber", "electrician", "plasterer", "builder", "painter", "roofer"];
+    if (stored && validTrades.includes(stored)) {
       return stored as TradeType;
     }
   } catch {

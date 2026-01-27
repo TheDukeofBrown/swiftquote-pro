@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, HardHat, Droplets, Zap, PaintBucket, ArrowRight, ArrowLeft, Plus, Trash2, Check } from "lucide-react";
+import { Loader2, HardHat, Droplets, Zap, PaintBucket, Paintbrush, Home, ArrowRight, ArrowLeft, Plus, Trash2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { brands } from "@/config/brands";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -30,6 +30,8 @@ const tradeOptions: { id: TradeType; name: string; brandName: string; icon: type
   { id: "electrician", name: "Electrician", brandName: brands.electrician.name, icon: Zap, description: brands.electrician.tagline, primaryHue: brands.electrician.primaryHue },
   { id: "plasterer", name: "Plasterer", brandName: brands.plasterer.name, icon: PaintBucket, description: brands.plasterer.tagline, primaryHue: brands.plasterer.primaryHue },
   { id: "builder", name: "Builder", brandName: brands.builder.name, icon: HardHat, description: brands.builder.tagline, primaryHue: brands.builder.primaryHue },
+  { id: "painter", name: "Painter & Decorator", brandName: brands.painter.name, icon: Paintbrush, description: brands.painter.tagline, primaryHue: brands.painter.primaryHue },
+  { id: "roofer", name: "Roofer", brandName: brands.roofer.name, icon: Home, description: brands.roofer.tagline, primaryHue: brands.roofer.primaryHue },
 ];
 
 // Default price items by trade
@@ -67,6 +69,22 @@ const tradeDefaultItems: Record<TradeType, DefaultPriceItem[]> = {
     { name: "Materials allowance", type: "material", unit: "each", unit_price: 1000 },
     { name: "Waste / skip allowance", type: "material", unit: "each", unit_price: 350 },
     { name: "Contingency", type: "uplift", unit: "percent", unit_price: 10 },
+  ],
+  painter: [
+    { name: "Day rate", type: "labour", unit: "day", unit_price: 180 },
+    { name: "Room paint (walls)", type: "service", unit: "each", unit_price: 200 },
+    { name: "Ceiling paint", type: "service", unit: "each", unit_price: 120 },
+    { name: "Woodwork (skirting/doors)", type: "service", unit: "each", unit_price: 150 },
+    { name: "Prep & filling allowance", type: "material", unit: "each", unit_price: 80 },
+    { name: "Materials allowance", type: "material", unit: "each", unit_price: 100 },
+  ],
+  roofer: [
+    { name: "Labour day rate", type: "labour", unit: "day", unit_price: 220 },
+    { name: "Call-out / inspection", type: "service", unit: "each", unit_price: 75 },
+    { name: "Roof repair allowance", type: "service", unit: "each", unit_price: 350 },
+    { name: "Replacement tiles/slates", type: "material", unit: "each", unit_price: 200 },
+    { name: "Leadwork / flashing", type: "material", unit: "each", unit_price: 400 },
+    { name: "Scaffolding allowance", type: "material", unit: "each", unit_price: 600 },
   ],
 };
 

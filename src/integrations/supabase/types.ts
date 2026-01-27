@@ -390,7 +390,13 @@ export type Database = {
         | "past_due"
         | "canceled"
         | "expired"
-      trade_type: "builder" | "plumber" | "electrician" | "plasterer"
+      trade_type:
+        | "builder"
+        | "plumber"
+        | "electrician"
+        | "plasterer"
+        | "painter"
+        | "roofer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -529,7 +535,14 @@ export const Constants = {
         "canceled",
         "expired",
       ],
-      trade_type: ["builder", "plumber", "electrician", "plasterer"],
+      trade_type: [
+        "builder",
+        "plumber",
+        "electrician",
+        "plasterer",
+        "painter",
+        "roofer",
+      ],
     },
   },
 } as const

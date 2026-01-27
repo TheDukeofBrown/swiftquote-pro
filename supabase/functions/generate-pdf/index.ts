@@ -163,6 +163,8 @@ function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[]): j
     electrician: [59, 130, 246], // Navy / Electric blue
     plasterer: [100, 116, 139], // Neutral grey / Slate
     builder: [51, 65, 85], // Slate / charcoal
+    painter: [20, 184, 166], // Deep green/teal
+    roofer: [71, 85, 105], // Dark grey
   };
   const brandColor = tradeColors[company.trade] || [100, 116, 139];
 
@@ -172,6 +174,8 @@ function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[]): j
     electrician: "SparkQuote",
     plasterer: "PlasterQuote",
     builder: "BuildQuote",
+    painter: "PaintQuote",
+    roofer: "RoofQuote",
   };
   const brandName = tradeNames[company.trade] || "QuoteTrack";
 

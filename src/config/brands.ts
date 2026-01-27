@@ -110,6 +110,52 @@ export const brands: Record<TradeType, BrandConfig> = {
       { description: "Waste / skip allowance", unitPrice: 350, itemType: "material" },
     ],
   },
+  painter: {
+    id: "painter",
+    name: "PaintQuote",
+    tagline: "Fast, professional decorating quotes in under 60 seconds",
+    description: "Built for painters & decorators who want to quote fast and look professional",
+    primaryHue: 160, // Deep green
+    accentHue: 45, // Cream/warm neutral
+    icon: "Paintbrush",
+    features: [
+      "Room quotes in seconds",
+      "Prep & materials included",
+      "Professional PDF output",
+    ],
+    defaultLabourRate: 35,
+    defaultItems: [
+      { description: "Day rate", unitPrice: 180, itemType: "labour" },
+      { description: "Room paint (walls)", unitPrice: 200, itemType: "labour" },
+      { description: "Ceiling paint", unitPrice: 120, itemType: "labour" },
+      { description: "Woodwork (skirting/doors)", unitPrice: 150, itemType: "labour" },
+      { description: "Prep & filling allowance", unitPrice: 80, itemType: "material" },
+      { description: "Materials allowance", unitPrice: 100, itemType: "material" },
+    ],
+  },
+  roofer: {
+    id: "roofer",
+    name: "RoofQuote",
+    tagline: "Send roofing quotes fast — without paperwork",
+    description: "Built for roofers who want to quote jobs quickly and win more work",
+    primaryHue: 220, // Dark grey/slate
+    accentHue: 50, // Safety yellow (subtle)
+    icon: "Home",
+    features: [
+      "Quick repair quotes",
+      "Scaffolding included",
+      "Clean, professional PDFs",
+    ],
+    defaultLabourRate: 50,
+    defaultItems: [
+      { description: "Labour day rate", unitPrice: 220, itemType: "labour" },
+      { description: "Call-out / inspection", unitPrice: 75, itemType: "labour" },
+      { description: "Roof repair allowance", unitPrice: 350, itemType: "labour" },
+      { description: "Replacement tiles/slates", unitPrice: 200, itemType: "material" },
+      { description: "Leadwork / flashing", unitPrice: 400, itemType: "material" },
+      { description: "Scaffolding allowance", unitPrice: 600, itemType: "material" },
+    ],
+  },
 };
 
 // Default brand for unauthenticated users or landing page
