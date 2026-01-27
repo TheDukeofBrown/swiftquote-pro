@@ -35,6 +35,7 @@ interface Company {
   address: string | null;
   trade: string;
   vat_registered: boolean | null;
+  vat_rate: number | null;
 }
 
 Deno.serve(async (req) => {
@@ -152,6 +153,7 @@ Deno.serve(async (req) => {
 function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[]): jsPDF {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
   let y = margin;
 
@@ -173,109 +175,98 @@ function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[]): j
   };
   const brandName = tradeNames[company.trade] || "QuoteTrack";
 
-  // Header bar
+  // ===== HEADER =====
+  // Clean header with company name prominent
   doc.setFillColor(...brandColor);
-  doc.rect(0, 0, pageWidth, 35, "F");
+  doc.rect(0, 0, pageWidth, 40, "F");
 
-  // Company name in header
+  // Company name in header (large, prominent)
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
+  doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
-  doc.text(company.business_name, margin, 15);
+  doc.text(company.business_name, margin, 18);
 
-  // Brand name
-  doc.setFontSize(10);
+  // Company contact details under name
+  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.text(`Powered by ${brandName}`, margin, 25);
+  let contactLine = "";
+  if (company.phone) contactLine += company.phone;
+  if (company.email) contactLine += (contactLine ? "  •  " : "") + company.email;
+  if (contactLine) {
+    doc.text(contactLine, margin, 28);
+  }
 
   // Quote reference on right
-  doc.setFontSize(14);
+  doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
-  doc.text(quote.reference, pageWidth - margin, 15, { align: "right" });
+  doc.text("QUOTE", pageWidth - margin, 14, { align: "right" });
+  doc.setFontSize(14);
+  doc.text(quote.reference, pageWidth - margin, 24, { align: "right" });
 
-  doc.setFontSize(10);
+  // Date under reference
+  doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   const createdDate = new Date(quote.created_at).toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
-  doc.text(createdDate, pageWidth - margin, 25, { align: "right" });
+  doc.text(createdDate, pageWidth - margin, 34, { align: "right" });
 
-  y = 50;
+  y = 55;
 
   // Reset text color
   doc.setTextColor(30, 41, 59);
 
-  // Two columns: Company info | Customer info
-  const colWidth = (pageWidth - margin * 2 - 20) / 2;
-
-  // Company details
-  doc.setFontSize(9);
+  // ===== CUSTOMER DETAILS =====
+  doc.setFontSize(10);
   doc.setTextColor(100, 116, 139);
-  doc.text("FROM", margin, y);
+  doc.setFont("helvetica", "bold");
+  doc.text("QUOTE FOR", margin, y);
+  y += 7;
+
+  doc.setFontSize(14);
+  doc.setTextColor(30, 41, 59);
+  doc.text(quote.customer_name, margin, y);
   y += 6;
 
-  doc.setFontSize(11);
-  doc.setTextColor(30, 41, 59);
-  doc.setFont("helvetica", "bold");
-  doc.text(company.business_name, margin, y);
-  y += 5;
-  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  
-  if (company.email) {
-    doc.text(company.email, margin, y);
-    y += 4;
-  }
-  if (company.phone) {
-    doc.text(company.phone, margin, y);
-    y += 4;
-  }
-  if (company.address) {
-    const addressLines = doc.splitTextToSize(company.address, colWidth);
-    doc.text(addressLines, margin, y);
-  }
-
-  // Customer details (right column)
-  let yRight = 50;
-  doc.setFontSize(9);
-  doc.setTextColor(100, 116, 139);
-  doc.text("TO", margin + colWidth + 20, yRight);
-  yRight += 6;
-
-  doc.setFontSize(11);
-  doc.setTextColor(30, 41, 59);
-  doc.setFont("helvetica", "bold");
-  doc.text(quote.customer_name, margin + colWidth + 20, yRight);
-  yRight += 5;
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-
   if (quote.customer_email) {
-    doc.text(quote.customer_email, margin + colWidth + 20, yRight);
-    yRight += 4;
+    doc.text(quote.customer_email, margin, y);
+    y += 5;
   }
   if (quote.job_address) {
-    const jobAddressLines = doc.splitTextToSize(quote.job_address, colWidth);
-    doc.text(jobAddressLines, margin + colWidth + 20, yRight);
+    const addressLines = doc.splitTextToSize(quote.job_address, pageWidth - margin * 2);
+    doc.text(addressLines, margin, y);
+    y += addressLines.length * 5;
   }
 
-  y = Math.max(y, yRight) + 15;
+  y += 10;
 
-  // Items table header
+  // ===== ITEMS TABLE =====
+  // Table header
+  const colWidths = {
+    desc: 90,
+    qty: 25,
+    unit: 35,
+    total: 35,
+  };
+
   doc.setFillColor(241, 245, 249);
-  doc.rect(margin, y, pageWidth - margin * 2, 8, "F");
+  doc.rect(margin, y, pageWidth - margin * 2, 10, "F");
 
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(71, 85, 105);
-  doc.text("Description", margin + 3, y + 5.5);
-  doc.text("Qty", pageWidth - margin - 75, y + 5.5);
-  doc.text("Unit Price", pageWidth - margin - 50, y + 5.5);
-  doc.text("Total", pageWidth - margin - 15, y + 5.5, { align: "right" });
+  
+  const tableX = margin + 4;
+  doc.text("Description", tableX, y + 7);
+  doc.text("Qty", tableX + colWidths.desc, y + 7, { align: "center" });
+  doc.text("Unit Price", tableX + colWidths.desc + colWidths.qty + 10, y + 7, { align: "right" });
+  doc.text("Amount", pageWidth - margin - 4, y + 7, { align: "right" });
 
-  y += 12;
+  y += 15;
 
   // Items
   doc.setFont("helvetica", "normal");
@@ -283,62 +274,100 @@ function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[]): j
   doc.setFontSize(10);
 
   for (const item of items) {
-    const descLines = doc.splitTextToSize(item.description, 90);
-    doc.text(descLines, margin + 3, y);
-    doc.text(String(item.quantity), pageWidth - margin - 75, y);
-    doc.text(formatCurrency(item.unit_price), pageWidth - margin - 50, y);
-    doc.text(formatCurrency(item.line_total), pageWidth - margin - 3, y, { align: "right" });
-    y += descLines.length * 5 + 3;
-
-    // Add page if needed
-    if (y > 260) {
+    // Check for page break
+    if (y > pageHeight - 80) {
       doc.addPage();
       y = margin;
     }
+
+    const descLines = doc.splitTextToSize(item.description, colWidths.desc - 5);
+    doc.text(descLines, tableX, y);
+    
+    doc.text(String(item.quantity), tableX + colWidths.desc, y, { align: "center" });
+    doc.text(formatCurrency(item.unit_price), tableX + colWidths.desc + colWidths.qty + 10, y, { align: "right" });
+    doc.text(formatCurrency(item.line_total), pageWidth - margin - 4, y, { align: "right" });
+    
+    y += Math.max(descLines.length * 5, 6) + 4;
+
+    // Light separator line
+    doc.setDrawColor(226, 232, 240);
+    doc.line(margin, y - 2, pageWidth - margin, y - 2);
   }
 
   y += 5;
 
-  // Totals section
-  doc.setDrawColor(226, 232, 240);
-  doc.line(pageWidth - margin - 80, y, pageWidth - margin, y);
-  y += 8;
-
+  // ===== TOTALS =====
+  const totalsX = pageWidth - margin - 80;
+  
   doc.setFontSize(10);
-  doc.text("Subtotal", pageWidth - margin - 80, y);
-  doc.text(formatCurrency(quote.subtotal), pageWidth - margin - 3, y, { align: "right" });
-  y += 6;
+  doc.setTextColor(71, 85, 105);
+  doc.text("Subtotal", totalsX, y);
+  doc.setTextColor(30, 41, 59);
+  doc.text(formatCurrency(quote.subtotal), pageWidth - margin - 4, y, { align: "right" });
+  y += 7;
 
   if (quote.vat_amount > 0) {
-    doc.text("VAT", pageWidth - margin - 80, y);
-    doc.text(formatCurrency(quote.vat_amount), pageWidth - margin - 3, y, { align: "right" });
-    y += 6;
+    const vatRate = company.vat_rate || 20;
+    doc.setTextColor(71, 85, 105);
+    doc.text(`VAT (${vatRate}%)`, totalsX, y);
+    doc.setTextColor(30, 41, 59);
+    doc.text(formatCurrency(quote.vat_amount), pageWidth - margin - 4, y, { align: "right" });
+    y += 7;
   }
 
+  // Total with background
+  y += 3;
+  doc.setFillColor(...brandColor);
+  doc.rect(totalsX - 5, y - 5, pageWidth - margin - totalsX + 9, 14, "F");
+  
   doc.setFont("helvetica", "bold");
   doc.setFontSize(12);
-  doc.text("Total", pageWidth - margin - 80, y + 2);
-  doc.text(formatCurrency(quote.total), pageWidth - margin - 3, y + 2, { align: "right" });
+  doc.setTextColor(255, 255, 255);
+  doc.text("TOTAL", totalsX, y + 4);
+  doc.text(formatCurrency(quote.total), pageWidth - margin - 4, y + 4, { align: "right" });
 
-  y += 20;
+  y += 25;
 
-  // Notes
+  // ===== NOTES =====
   if (quote.notes) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.setTextColor(71, 85, 105);
-    doc.text("Notes", margin, y);
-    y += 5;
+    doc.text("Notes & Terms", margin, y);
+    y += 6;
 
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100, 116, 139);
     doc.setFontSize(9);
     const notesLines = doc.splitTextToSize(quote.notes, pageWidth - margin * 2);
     doc.text(notesLines, margin, y);
+    y += notesLines.length * 4 + 10;
   }
 
-  // Footer
-  const footerY = doc.internal.pageSize.getHeight() - 15;
+  // ===== ACCEPT QUOTE BUTTON (visual representation) =====
+  if (y < pageHeight - 50) {
+    y = Math.max(y + 15, pageHeight - 60);
+    
+    // Accept button visual
+    const buttonWidth = 140;
+    const buttonX = (pageWidth - buttonWidth) / 2;
+    
+    doc.setFillColor(34, 197, 94); // Green
+    doc.roundedRect(buttonX, y, buttonWidth, 14, 3, 3, "F");
+    
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(255, 255, 255);
+    doc.text("✓ Accept This Quote", pageWidth / 2, y + 9.5, { align: "center" });
+    
+    y += 20;
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text("Reply to this quote or contact us to accept", pageWidth / 2, y, { align: "center" });
+  }
+
+  // ===== FOOTER =====
+  const footerY = pageHeight - 12;
   doc.setFontSize(8);
   doc.setTextColor(148, 163, 184);
   doc.text(`Generated by ${brandName}`, pageWidth / 2, footerY, { align: "center" });

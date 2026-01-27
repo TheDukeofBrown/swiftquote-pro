@@ -24,6 +24,8 @@ import {
   Settings,
   LogOut,
   AlertTriangle,
+  Library,
+  Zap,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -45,6 +47,7 @@ export default function Dashboard() {
   const { canCreateQuote, isTrialing, trialDaysRemaining, isReadOnly } = useSubscription();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
+  const [priceItemCount, setPriceItemCount] = useState(0);
   const [stats, setStats] = useState({
     total: 0,
     sent: 0,
@@ -52,13 +55,25 @@ export default function Dashboard() {
     declined: 0,
     totalValue: 0,
     acceptedValue: 0,
+    last30DaysSent: 0,
+    last30DaysAcceptedValue: 0,
   });
 
   useEffect(() => {
     if (company) {
       fetchQuotes();
+      fetchPriceItemCount();
     }
   }, [company]);
+
+  const fetchPriceItemCount = async () => {
+    if (!company) return;
+    const { count } = await supabase
+      .from("price_items")
+      .select("*", { count: "exact", head: true })
+      .eq("company_id", company.id);
+    setPriceItemCount(count || 0);
+  };
 
   const fetchQuotes = async () => {
     if (!company) return;
@@ -78,11 +93,21 @@ export default function Dashboard() {
       
       // Calculate stats
       const allQuotes = data || [];
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
       const sent = allQuotes.filter(q => q.status !== "draft").length;
       const accepted = allQuotes.filter(q => q.status === "accepted").length;
       const declined = allQuotes.filter(q => q.status === "declined").length;
       const totalValue = allQuotes.reduce((sum, q) => sum + Number(q.total || 0), 0);
       const acceptedValue = allQuotes
+        .filter(q => q.status === "accepted")
+        .reduce((sum, q) => sum + Number(q.total || 0), 0);
+      
+      // Last 30 days stats
+      const recentQuotes = allQuotes.filter(q => new Date(q.created_at) >= thirtyDaysAgo);
+      const last30DaysSent = recentQuotes.filter(q => q.status !== "draft").length;
+      const last30DaysAcceptedValue = recentQuotes
         .filter(q => q.status === "accepted")
         .reduce((sum, q) => sum + Number(q.total || 0), 0);
 
@@ -93,6 +118,8 @@ export default function Dashboard() {
         declined,
         totalValue,
         acceptedValue,
+        last30DaysSent,
+        last30DaysAcceptedValue,
       });
     }
     setLoading(false);
@@ -154,15 +181,30 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Quick action */}
+        {/* Price Library Prompt */}
+        {priceItemCount === 0 && !loading && (
+          <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-primary">
+              <Library className="w-4 h-4" />
+              <span className="text-sm">
+                Add your default prices to quote faster
+              </span>
+            </div>
+            <Link to="/settings?tab=library">
+              <Button size="sm" variant="outline">Set Defaults</Button>
+            </Link>
+          </div>
+        )}
+
+        {/* Hero CTA */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground">Welcome back, here's your overview</p>
           </div>
           <Link to="/quotes/new">
-            <Button size="lg" className="w-full sm:w-auto" disabled={isReadOnly || !canCreateQuote()}>
-              <Plus className="w-4 h-4 mr-2" />
+            <Button size="lg" className="w-full sm:w-auto gap-2" disabled={isReadOnly || !canCreateQuote()}>
+              <Zap className="w-4 h-4" />
               New Quote
             </Button>
           </Link>
@@ -170,6 +212,38 @@ export default function Dashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="stat-card">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Sent (30 days)</p>
+                {loading ? (
+                  <Skeleton className="h-8 w-16 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold">{stats.last30DaysSent}</p>
+                )}
+              </div>
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Send className="w-5 h-5 text-primary" />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="stat-card">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Won (30 days)</p>
+                {loading ? (
+                  <Skeleton className="h-8 w-24 mt-1" />
+                ) : (
+                  <p className="text-2xl font-bold text-success">{formatCurrency(stats.last30DaysAcceptedValue)}</p>
+                )}
+              </div>
+              <div className="p-2 bg-success/10 rounded-lg">
+                <CheckCircle2 className="w-5 h-5 text-success" />
+              </div>
+            </div>
+          </Card>
+
           <Card className="stat-card">
             <div className="flex items-start justify-between">
               <div>
@@ -189,39 +263,7 @@ export default function Dashboard() {
           <Card className="stat-card">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Quotes Sent</p>
-                {loading ? (
-                  <Skeleton className="h-8 w-16 mt-1" />
-                ) : (
-                  <p className="text-2xl font-bold">{stats.sent}</p>
-                )}
-              </div>
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Send className="w-5 h-5 text-primary" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="stat-card">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Accepted</p>
-                {loading ? (
-                  <Skeleton className="h-8 w-16 mt-1" />
-                ) : (
-                  <p className="text-2xl font-bold text-success">{stats.accepted}</p>
-                )}
-              </div>
-              <div className="p-2 bg-success/10 rounded-lg">
-                <CheckCircle2 className="w-5 h-5 text-success" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="stat-card">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Value</p>
+                <p className="text-sm text-muted-foreground">All-time Value</p>
                 {loading ? (
                   <Skeleton className="h-8 w-24 mt-1" />
                 ) : (
