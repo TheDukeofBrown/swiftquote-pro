@@ -43,9 +43,14 @@ export default function Index() {
       <header className="border-b border-border">
         <div className="container flex items-center justify-between h-16">
           <BrandLogo />
-          <Link to="/auth">
-            <Button>Get Started</Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link to="/auth">
+              <Button variant="ghost">Login</Button>
+            </Link>
+            <Link to="/auth">
+              <Button>Get Started</Button>
+            </Link>
+          </div>
         </div>
       </header>
 
