@@ -1,3 +1,4 @@
+import { ComponentType, CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
@@ -55,7 +56,7 @@ export default function Index() {
     );
   }
 
-  const tradeProducts: (BrandConfig & { Icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> })[] = [
+  const tradeProducts: (BrandConfig & { Icon: ComponentType<{ className?: string; style?: CSSProperties }> })[] = [
     { ...brands.plumber, Icon: Droplets },
     { ...brands.electrician, Icon: Zap },
     { ...brands.plasterer, Icon: PaintBucket },
@@ -138,7 +139,7 @@ export default function Index() {
             Quoting shouldn't slow your business down.
           </p>
           <p className="text-muted-foreground mb-6">
-            WorkQuote gives you a trade-specific quoting tool, built around how you actually work.
+            {platformBrand.name} gives you a trade-specific quoting tool, built around how you actually work.
           </p>
           <p className="text-sm font-medium text-primary">
             Select your trade below to get started.
@@ -152,40 +153,54 @@ export default function Index() {
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">One platform. Trade-specific quoting tools.</h2>
             <p className="text-muted-foreground">
-              Each trade gets its own experience, pricing defaults, and language — all powered by WorkQuote.
+              Each trade gets its own experience, pricing defaults, and language — all powered by {platformBrand.name}.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {tradeProducts.map((product) => (
-              <div
-                key={product.id}
-                className="p-6 rounded-xl border border-border bg-card hover:shadow-lg hover:border-primary/50 transition-all cursor-pointer group"
-                onClick={() => handleSelectTrade(product.id)}
-              >
+            {tradeProducts.map((product) => {
+              const handleKeyDown = (e: React.KeyboardEvent) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleSelectTrade(product.id);
+                }
+              };
+
+              return (
                 <div
-                  className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
-                  style={{ backgroundColor: `hsl(${product.primaryHue} 70% 45% / 0.1)` }}
+                  key={product.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Select ${product.name}`}
+                  className="p-6 rounded-xl border border-border bg-card hover:shadow-lg hover:border-primary/50 transition-all cursor-pointer group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  onClick={() => handleSelectTrade(product.id)}
+                  onKeyDown={handleKeyDown}
                 >
-                  <product.Icon
-                    className="w-6 h-6"
-                    style={{ color: `hsl(${product.primaryHue} 70% 45%)` }}
-                  />
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
+                    style={{ backgroundColor: `hsl(${product.primaryHue} 70% 45% / 0.1)` }}
+                  >
+                    <product.Icon
+                      className="w-6 h-6"
+                      style={{ color: `hsl(${product.primaryHue} 70% 45%)` }}
+                    />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2">{product.name}</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {tradeCardCopy[product.id].tagline}
+                  </p>
+                  <Button 
+                    className="w-full group-hover:opacity-100 opacity-80 transition-opacity"
+                    style={{ 
+                      backgroundColor: `hsl(${product.primaryHue} 70% 45%)`,
+                      color: 'white'
+                    }}
+                    tabIndex={-1}
+                  >
+                    {tradeCardCopy[product.id].cta}
+                  </Button>
                 </div>
-                <h3 className="font-bold text-lg mb-2">{product.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {tradeCardCopy[product.id].tagline}
-                </p>
-                <Button 
-                  className="w-full group-hover:opacity-100 opacity-80 transition-opacity"
-                  style={{ 
-                    backgroundColor: `hsl(${product.primaryHue} 70% 45%)`,
-                    color: 'white'
-                  }}
-                >
-                  {tradeCardCopy[product.id].cta}
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -200,7 +215,7 @@ export default function Index() {
       <section className="py-16">
         <div className="container">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Why trades use WorkQuote</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">Why trades use {platformBrand.name}</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
             <div className="text-center animate-slide-up">
