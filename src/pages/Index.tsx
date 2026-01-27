@@ -15,15 +15,10 @@ export default function Index() {
   const { brand } = useBrand();
   const navigate = useNavigate();
 
+  // Only auto-redirect users who have completed onboarding (have a company)
   useEffect(() => {
-    if (!authLoading && !companyLoading) {
-      if (user) {
-        if (company) {
-          navigate("/dashboard");
-        } else {
-          navigate("/onboarding");
-        }
-      }
+    if (!authLoading && !companyLoading && user && company) {
+      navigate("/dashboard");
     }
   }, [user, company, authLoading, companyLoading, navigate]);
 
