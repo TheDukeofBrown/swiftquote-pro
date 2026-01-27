@@ -14,6 +14,8 @@ import { UsageDisplay } from "@/components/UsageDisplay";
 import { ReadOnlyGuard } from "@/components/FeatureGate";
 import { QuickQuoteModal } from "@/components/QuickQuoteModal";
 import { PriceLibrarySetupModal } from "@/components/PriceLibrarySetupModal";
+import { DevTestHarness } from "@/components/DevTestHarness";
+import { useToast } from "@/hooks/use-toast";
 import {
   FileText,
   Plus,
@@ -28,6 +30,7 @@ import {
   AlertTriangle,
   Library,
   Zap,
+  Sparkles,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -46,6 +49,7 @@ export default function Dashboard() {
   const { signOut } = useAuth();
   const { company } = useCompany();
   const { brand } = useBrand();
+  const { toast } = useToast();
   const { canCreateQuote, isTrialing, trialDaysRemaining, isReadOnly } = useSubscription();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,6 +72,55 @@ export default function Dashboard() {
     if (company) {
       fetchQuotes();
       fetchPriceItemCount();
+      
+      // Set up realtime subscription for quote status updates
+      const channel = supabase
+        .channel('quote-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'quotes',
+            filter: `company_id=eq.${company.id}`,
+          },
+          (payload) => {
+            console.log('Quote updated:', payload);
+            // Update the quote in state
+            setQuotes(prev => 
+              prev.map(q => 
+                q.id === payload.new.id ? { ...q, ...payload.new } : q
+              )
+            );
+            
+            // Show toast for important status changes
+            const newStatus = payload.new.status;
+            const oldStatus = payload.old?.status;
+            
+            if (newStatus === 'accepted' && oldStatus !== 'accepted') {
+              toast({
+                title: "🎉 Quote Accepted!",
+                description: `${payload.new.customer_name} accepted ${payload.new.reference}`,
+              });
+            } else if (newStatus === 'viewed' && oldStatus === 'sent') {
+              toast({
+                title: "👀 Quote Viewed",
+                description: `${payload.new.customer_name} opened ${payload.new.reference}`,
+              });
+            } else if (newStatus === 'declined') {
+              toast({
+                title: "Quote Declined",
+                description: `${payload.new.customer_name} declined ${payload.new.reference}`,
+                variant: "destructive",
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [company]);
 
@@ -336,11 +389,16 @@ export default function Dashboard() {
                 {quotes.map((quote) => {
                   const config = statusConfig[quote.status];
                   const StatusIcon = config.icon;
+                  const isAccepted = quote.status === "accepted";
                   return (
                     <Link
                       key={quote.id}
                       to={`/quotes/${quote.id}`}
-                      className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                      className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                        isAccepted 
+                          ? "border-green-300 bg-green-50/50 hover:bg-green-50 dark:bg-green-950/20 dark:border-green-800" 
+                          : "border-border hover:bg-muted/50"
+                      }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="hidden sm:block">
@@ -350,14 +408,21 @@ export default function Dashboard() {
                           </Badge>
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium truncate">{quote.customer_name}</p>
+                          <p className="font-medium truncate flex items-center gap-2">
+                            {quote.customer_name}
+                            {isAccepted && (
+                              <Sparkles className="w-4 h-4 text-green-600 animate-pulse" />
+                            )}
+                          </p>
                           <p className="text-sm text-muted-foreground">
                             {quote.reference} · {formatDate(quote.created_at)}
                           </p>
                         </div>
                       </div>
                       <div className="text-right flex-shrink-0 ml-4">
-                        <p className="font-semibold">{formatCurrency(Number(quote.total))}</p>
+                        <p className={`font-semibold ${isAccepted ? "text-green-700 dark:text-green-400" : ""}`}>
+                          {formatCurrency(Number(quote.total))}
+                        </p>
                         <Badge variant="outline" className={`${config.class} sm:hidden`}>
                           {config.label}
                         </Badge>
@@ -386,6 +451,9 @@ export default function Dashboard() {
             fetchPriceItemCount();
           }}
         />
+
+        {/* Dev Test Harness (only in development) */}
+        <DevTestHarness />
       </main>
     </div>
   );

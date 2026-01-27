@@ -365,27 +365,35 @@ export default function QuoteView() {
                 : "border-destructive bg-red-50 dark:bg-red-950/20"
             }
           >
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
+            <CardContent className="pt-6 pb-6">
+              <div className="flex flex-col items-center text-center gap-4">
                 {quote.status === "accepted" ? (
                   <>
-                    <CheckCircle2 className="w-8 h-8 text-green-600" />
+                    <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center animate-fade-in">
+                      <CheckCircle2 className="w-10 h-10 text-green-600" />
+                    </div>
                     <div>
-                      <p className="font-semibold text-green-700 dark:text-green-400">
-                        Quote Accepted
+                      <p className="font-bold text-xl text-green-700 dark:text-green-400">
+                        Quote Accepted! 🎉
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        You accepted this quote on {formatDate(quote.accepted_at!)}
+                      <p className="text-muted-foreground mt-1">
+                        Thank you for accepting this quote. {quote.company?.business_name} has been notified and will be in touch shortly.
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-3">
+                        Accepted on {formatDate(quote.accepted_at!)}
                       </p>
                     </div>
                   </>
                 ) : (
                   <>
-                    <XCircle className="w-8 h-8 text-destructive" />
+                    <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                      <XCircle className="w-10 h-10 text-destructive" />
+                    </div>
                     <div>
-                      <p className="font-semibold text-destructive">Quote Declined</p>
-                      <p className="text-sm text-muted-foreground">
-                        You declined this quote on {formatDate(quote.declined_at!)}
+                      <p className="font-bold text-xl text-destructive">Quote Declined</p>
+                      <p className="text-muted-foreground mt-1">
+                        You declined this quote on {formatDate(quote.declined_at!)}. 
+                        If you change your mind, please contact {quote.company?.business_name}.
                       </p>
                     </div>
                   </>
@@ -394,35 +402,45 @@ export default function QuoteView() {
             </CardContent>
           </Card>
         ) : (
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              size="lg"
-              className="flex-1 bg-green-600 hover:bg-green-700"
-              onClick={() => handleResponse("accept")}
-              disabled={responding}
-            >
-              {responding ? (
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              ) : (
-                <Check className="w-5 h-5 mr-2" />
-              )}
-              Accept Quote
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-              onClick={() => handleResponse("decline")}
-              disabled={responding}
-            >
-              {responding ? (
-                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-              ) : (
-                <X className="w-5 h-5 mr-2" />
-              )}
-              Decline
-            </Button>
-          </div>
+          <Card className="border-2 border-dashed border-primary/30">
+            <CardContent className="pt-6 pb-6">
+              <p className="text-center text-muted-foreground mb-4">
+                Ready to proceed with this quote?
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  size="lg"
+                  className="flex-1 bg-green-600 hover:bg-green-700 h-14 text-lg"
+                  onClick={() => handleResponse("accept")}
+                  disabled={responding}
+                >
+                  {responding ? (
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  ) : (
+                    <Check className="w-5 h-5 mr-2" />
+                  )}
+                  Accept Quote
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground h-14"
+                  onClick={() => handleResponse("decline")}
+                  disabled={responding}
+                >
+                  {responding ? (
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  ) : (
+                    <X className="w-5 h-5 mr-2" />
+                  )}
+                  Decline
+                </Button>
+              </div>
+              <p className="text-xs text-center text-muted-foreground mt-4">
+                By accepting, you agree to proceed with the work as quoted
+              </p>
+            </CardContent>
+          </Card>
         )}
 
         {/* Footer */}
