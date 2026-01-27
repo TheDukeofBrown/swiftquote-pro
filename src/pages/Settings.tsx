@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
+import { useBrand } from "@/contexts/BrandContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Save, LogOut } from "lucide-react";
 
@@ -15,6 +17,7 @@ export default function Settings() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { company, refetch } = useCompany();
+  const { brand } = useBrand();
   const { toast } = useToast();
 
   const [saving, setSaving] = useState(false);
@@ -91,8 +94,22 @@ export default function Settings() {
         {/* Business Details */}
         <Card>
           <CardHeader>
-            <CardTitle>Business Details</CardTitle>
-            <CardDescription>This information appears on your quotes</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Business Details</CardTitle>
+                <CardDescription>This information appears on your quotes</CardDescription>
+              </div>
+              <Badge 
+                variant="outline" 
+                className="text-sm"
+                style={{ 
+                  borderColor: `hsl(${brand.primaryHue} 70% 45%)`,
+                  color: `hsl(${brand.primaryHue} 70% 45%)`
+                }}
+              >
+                {brand.name}
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">

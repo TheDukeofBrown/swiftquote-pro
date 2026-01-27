@@ -10,15 +10,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, HardHat, Droplets, Zap, PaintBucket, ArrowRight, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { brands } from "@/config/brands";
 import type { Database } from "@/integrations/supabase/types";
 
 type TradeType = Database["public"]["Enums"]["trade_type"];
 
-const trades: { id: TradeType; name: string; icon: typeof HardHat; description: string }[] = [
-  { id: "builder", name: "Builder", icon: HardHat, description: "Construction, extensions, renovations" },
-  { id: "plumber", name: "Plumber", icon: Droplets, description: "Plumbing, heating, bathrooms" },
-  { id: "electrician", name: "Electrician", icon: Zap, description: "Electrical work, rewiring, testing" },
-  { id: "plasterer", name: "Plasterer", icon: PaintBucket, description: "Plastering, rendering, screeding" },
+const tradeOptions: { id: TradeType; name: string; brandName: string; icon: typeof HardHat; description: string; primaryHue: number }[] = [
+  { id: "plumber", name: "Plumber", brandName: brands.plumber.name, icon: Droplets, description: brands.plumber.tagline, primaryHue: brands.plumber.primaryHue },
+  { id: "electrician", name: "Electrician", brandName: brands.electrician.name, icon: Zap, description: brands.electrician.tagline, primaryHue: brands.electrician.primaryHue },
+  { id: "plasterer", name: "Plasterer", brandName: brands.plasterer.name, icon: PaintBucket, description: brands.plasterer.tagline, primaryHue: brands.plasterer.primaryHue },
+  { id: "builder", name: "Builder", brandName: brands.builder.name, icon: HardHat, description: brands.builder.tagline, primaryHue: brands.builder.primaryHue },
 ];
 
 export default function Onboarding() {
@@ -33,8 +34,11 @@ export default function Onboarding() {
   const [businessName, setBusinessName] = useState("");
   const [email, setEmail] = useState(user?.email || "");
   const [phone, setPhone] = useState("");
-  const [labourRate, setLabourRate] = useState("45");
+  const [labourRate, setLabourRate] = useState("");
   const [vatRegistered, setVatRegistered] = useState(false);
+
+  // Get default labour rate from brand config when trade is selected
+  const selectedBrand = selectedTrade ? brands[selectedTrade] : null;
 
   const handleComplete = async () => {
     if (!user || !selectedTrade || !businessName.trim()) {
@@ -48,13 +52,14 @@ export default function Onboarding() {
 
     setLoading(true);
     try {
+      const defaultRate = selectedBrand?.defaultLabourRate || 45;
       const { error } = await supabase.from("companies").insert({
         user_id: user.id,
         business_name: businessName.trim(),
         email: email.trim() || null,
         phone: phone.trim() || null,
         trade: selectedTrade,
-        default_labour_rate: parseFloat(labourRate) || 45,
+        default_labour_rate: parseFloat(labourRate) || defaultRate,
         vat_registered: vatRegistered,
       });
 
@@ -63,7 +68,7 @@ export default function Onboarding() {
       await refetch();
       toast({
         title: "Setup complete!",
-        description: "Your business is ready. Let's create your first quote.",
+        description: `Welcome to ${selectedBrand?.name || "QuoteTrack"}. Let's create your first quote.`,
       });
       navigate("/dashboard");
     } catch (err: any) {
@@ -101,30 +106,36 @@ export default function Onboarding() {
         {step === 1 && (
           <Card className="animate-slide-up">
             <CardHeader>
-              <CardTitle>What's your trade?</CardTitle>
-              <CardDescription>This helps us customize your quote templates</CardDescription>
+              <CardTitle>Select Your Trade</CardTitle>
+              <CardDescription>Choose your trade to get a branded experience</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3">
-                {trades.map((trade) => {
+                {tradeOptions.map((trade) => {
                   const Icon = trade.icon;
+                  const isSelected = selectedTrade === trade.id;
                   return (
                     <button
                       key={trade.id}
-                      onClick={() => setSelectedTrade(trade.id)}
+                      onClick={() => {
+                        setSelectedTrade(trade.id);
+                        // Set default labour rate for this trade
+                        setLabourRate(String(brands[trade.id].defaultLabourRate));
+                      }}
                       className={cn(
-                        "p-4 rounded-lg border-2 text-left transition-all hover:border-primary/50",
-                        selectedTrade === trade.id
+                        "p-4 rounded-lg border-2 text-left transition-all hover:shadow-md",
+                        isSelected
                           ? "border-primary bg-primary/5"
-                          : "border-border bg-card"
+                          : "border-border bg-card hover:border-primary/30"
                       )}
+                      style={isSelected ? { borderColor: `hsl(${trade.primaryHue} 70% 45%)` } : undefined}
                     >
-                      <Icon className={cn(
-                        "w-8 h-8 mb-2",
-                        selectedTrade === trade.id ? "text-primary" : "text-muted-foreground"
-                      )} />
-                      <div className="font-medium">{trade.name}</div>
-                      <div className="text-xs text-muted-foreground">{trade.description}</div>
+                      <Icon 
+                        className="w-8 h-8 mb-2"
+                        style={{ color: isSelected ? `hsl(${trade.primaryHue} 70% 45%)` : undefined }}
+                      />
+                      <div className="font-bold">{trade.brandName}</div>
+                      <div className="text-xs text-muted-foreground mt-1">{trade.description}</div>
                     </button>
                   );
                 })}

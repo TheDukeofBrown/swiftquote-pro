@@ -1,14 +1,18 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
+import { useBrand } from "@/contexts/BrandContext";
 import { Button } from "@/components/ui/button";
-import { FileText, ArrowRight, CheckCircle, Clock, Zap, Shield, Loader2 } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
+import { ArrowRight, CheckCircle, Zap, Shield, Loader2, Droplets, HardHat, PaintBucket } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { brands } from "@/config/brands";
 
 export default function Index() {
   const { user, loading: authLoading } = useAuth();
   const { company, loading: companyLoading } = useCompany();
+  const { brand } = useBrand();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,18 +35,19 @@ export default function Index() {
     );
   }
 
-  // Landing page for non-authenticated users
+  const tradeProducts = [
+    { ...brands.plumber, Icon: Droplets },
+    { ...brands.electrician, Icon: Zap },
+    { ...brands.plasterer, Icon: PaintBucket },
+    { ...brands.builder, Icon: HardHat },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border">
         <div className="container flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-              <FileText className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold text-foreground">QuoteTrack</span>
-          </div>
+          <BrandLogo />
           <Link to="/auth">
             <Button>Get Started</Button>
           </Link>
@@ -58,8 +63,7 @@ export default function Index() {
             <span className="text-gradient">In Under 60 Seconds</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            The fastest way for UK tradespeople to create, send, and track professional quotes. 
-            Built for builders, plumbers, electricians, and plasterers.
+            {brand.tagline}. Built for builders, plumbers, electricians, and plasterers.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
             <Link to="/auth">
@@ -106,20 +110,40 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Trades */}
+      {/* Trade Products */}
       <section className="py-16">
-        <div className="container text-center max-w-2xl">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">Built for Your Trade</h2>
-          <p className="text-muted-foreground mb-8">
-            Pre-configured templates and pricing for UK tradespeople
-          </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            {["Builders", "Plumbers", "Electricians", "Plasterers"].map((trade) => (
+        <div className="container">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">One Platform, Four Brands</h2>
+            <p className="text-muted-foreground">
+              Choose your trade and get a fully branded quoting experience
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            {tradeProducts.map((product) => (
               <div
-                key={trade}
-                className="px-4 py-2 rounded-full bg-muted text-sm font-medium"
+                key={product.id}
+                className="p-6 rounded-xl border border-border bg-card hover:shadow-lg transition-shadow"
               >
-                {trade}
+                <div
+                  className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
+                  style={{ backgroundColor: `hsl(${product.primaryHue} 70% 45% / 0.1)` }}
+                >
+                  <product.Icon
+                    className="w-6 h-6"
+                    style={{ color: `hsl(${product.primaryHue} 70% 45%)` }}
+                  />
+                </div>
+                <h3 className="font-bold text-lg mb-1">{product.name}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{product.tagline}</p>
+                <ul className="space-y-2">
+                  {product.features.map((feature, idx) => (
+                    <li key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
+                      <CheckCircle className="w-3 h-3 mt-0.5 text-primary shrink-0" />
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
@@ -145,7 +169,7 @@ export default function Index() {
       <footer className="py-8 border-t border-border">
         <div className="container text-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} QuoteTrack. Built for UK tradespeople.
+            © {new Date().getFullYear()} {brand.name}. Built for UK tradespeople.
           </p>
         </div>
       </footer>

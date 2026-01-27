@@ -2,15 +2,16 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
+import { useBrand } from "@/contexts/BrandContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import BrandLogo from "@/components/BrandLogo";
 import {
   FileText,
   Plus,
-  TrendingUp,
   CheckCircle2,
   Clock,
   XCircle,
@@ -36,6 +37,7 @@ const statusConfig: Record<QuoteStatus, { label: string; class: string; icon: ty
 export default function Dashboard() {
   const { signOut } = useAuth();
   const { company } = useCompany();
+  const { brand } = useBrand();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -111,11 +113,8 @@ export default function Dashboard() {
       {/* Header */}
       <header className="bg-card border-b border-border sticky top-0 z-10">
         <div className="container flex items-center justify-between h-16">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <FileText className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-foreground hidden sm:inline">QuoteForge</span>
+          <Link to="/dashboard">
+            <BrandLogo size="sm" />
           </Link>
           
           <div className="flex items-center gap-2">

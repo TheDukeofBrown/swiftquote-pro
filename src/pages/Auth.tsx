@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useBrand } from "@/contexts/BrandContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, Loader2 } from "lucide-react";
+import BrandLogo from "@/components/BrandLogo";
+import { Loader2 } from "lucide-react";
 import { z } from "zod";
 
 const authSchema = z.object({
@@ -18,6 +20,7 @@ const authSchema = z.object({
 export default function Auth() {
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
+  const { brand } = useBrand();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -56,7 +59,7 @@ export default function Auth() {
       if (type === "signup") {
         toast({
           title: "Account created!",
-          description: "Welcome to QuoteTrack. Let's set up your business.",
+          description: `Welcome to ${brand.name}. Let's set up your business.`,
         });
       }
       
@@ -77,12 +80,9 @@ export default function Auth() {
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <FileText className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-2xl font-bold text-foreground">QuoteTrack</span>
+            <BrandLogo size="lg" />
           </Link>
-          <p className="text-muted-foreground">Professional quotes in under 60 seconds</p>
+          <p className="text-muted-foreground">{brand.tagline}</p>
         </div>
 
         <Card>
