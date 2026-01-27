@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCompany } from "@/contexts/CompanyContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ import {
   MapPin,
   Loader2,
   Trash2,
+  FileText,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -50,12 +52,14 @@ export default function QuoteDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { company } = useCompany();
+  const { canDownloadPdf, pdfsUsed, pdfsLimit, refetch: refetchSubscription } = useSubscription();
   const { toast } = useToast();
   
   const [quote, setQuote] = useState<Quote | null>(null);
   const [items, setItems] = useState<QuoteItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -130,6 +134,65 @@ export default function QuoteDetail() {
     }
   };
 
+  const downloadPdf = async () => {
+    if (!quote) return;
+    
+    if (!canDownloadPdf()) {
+      toast({
+        title: "PDF limit reached",
+        description: `You've used ${pdfsUsed} of ${pdfsLimit} PDFs this month. Upgrade for more.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setPdfLoading(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      
+      if (!token) {
+        throw new Error("Not authenticated");
+      }
+
+      const response = await supabase.functions.invoke("generate-pdf", {
+        body: { quoteId: quote.id },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Failed to generate PDF");
+      }
+
+      // The response data is already the PDF blob
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${quote.reference}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // Refresh usage count
+      await refetchSubscription();
+      
+      toast({
+        title: "PDF downloaded",
+        description: `${quote.reference}.pdf saved to your device`,
+      });
+    } catch (error: any) {
+      console.error("PDF download error:", error);
+      toast({
+        title: "Download failed",
+        description: error.message || "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-GB", {
       style: "currency",
@@ -178,6 +241,19 @@ export default function QuoteDetail() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={downloadPdf}
+              disabled={pdfLoading}
+            >
+              {pdfLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 mr-1" />
+              )}
+              <span className="hidden sm:inline">Download PDF</span>
+            </Button>
             {quote.status === "draft" && (
               <Link to={`/quotes/${quote.id}/edit`}>
                 <Button variant="outline" size="sm">

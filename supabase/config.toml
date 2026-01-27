@@ -1,1 +1,4 @@
 project_id = "elastorrbteubixdcoft"
+
+[functions.generate-pdf]
+verify_jwt = false
