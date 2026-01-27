@@ -7,12 +7,24 @@ import BrandLogo from "@/components/BrandLogo";
 import { ArrowRight, CheckCircle, Zap, Shield, Loader2, Droplets, HardHat, PaintBucket } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { brands } from "@/config/brands";
+import { brands, BrandConfig } from "@/config/brands";
+import type { Database } from "@/integrations/supabase/types";
+
+type TradeType = Database["public"]["Enums"]["trade_type"];
+
+const tradeHeroSubtext: Record<TradeType, string> = {
+  plumber: "Built for busy plumbers who want to quote faster and win more jobs.",
+  electrician: "Built for sparks who need professional quotes on the go.",
+  plasterer: "Built for plasterers who'd rather be on-site than doing paperwork.",
+  builder: "Built for builders who want to spend less time quoting and more time building.",
+};
+
+const genericSubtext = "Built for builders, plumbers, electricians, and plasterers.";
 
 export default function Index() {
   const { user, loading: authLoading } = useAuth();
   const { company, loading: companyLoading } = useCompany();
-  const { brand } = useBrand();
+  const { brand, selectBrand } = useBrand();
   const navigate = useNavigate();
 
   // Only auto-redirect users who have completed onboarding (have a company)
@@ -30,12 +42,20 @@ export default function Index() {
     );
   }
 
-  const tradeProducts = [
+  const tradeProducts: (BrandConfig & { Icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> })[] = [
     { ...brands.plumber, Icon: Droplets },
     { ...brands.electrician, Icon: Zap },
     { ...brands.plasterer, Icon: PaintBucket },
     { ...brands.builder, Icon: HardHat },
   ];
+
+  const handleSelectTrade = (tradeId: TradeType) => {
+    selectBrand(tradeId);
+    navigate("/auth");
+  };
+
+  // Get trade-specific or generic subtext
+  const heroSubtext = brand.id ? tradeHeroSubtext[brand.id] : genericSubtext;
 
   return (
     <div className="min-h-screen bg-background">
@@ -55,7 +75,7 @@ export default function Index() {
       </header>
 
       {/* Hero */}
-      <section className="py-20 md:py-32">
+      <section className="py-16 md:py-24">
         <div className="container text-center max-w-3xl">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in">
             Professional Quotes
@@ -63,8 +83,30 @@ export default function Index() {
             <span className="text-gradient">In Under 60 Seconds</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            {brand.tagline}. Built for builders, plumbers, electricians, and plasterers.
+            {heroSubtext}
           </p>
+          
+          {/* Trade Selection Buttons */}
+          <div className="mb-8 animate-fade-in" style={{ animationDelay: "0.15s" }}>
+            <p className="text-sm font-medium text-muted-foreground mb-4">Choose your trade to get started</p>
+            <div className="flex flex-wrap justify-center gap-3">
+              {tradeProducts.map((product) => (
+                <Button
+                  key={product.id}
+                  variant={brand.id === product.id ? "default" : "outline"}
+                  className="gap-2"
+                  onClick={() => handleSelectTrade(product.id)}
+                >
+                  <product.Icon 
+                    className="w-4 h-4" 
+                    style={brand.id !== product.id ? { color: `hsl(${product.primaryHue} 70% 45%)` } : undefined}
+                  />
+                  {product.id.charAt(0).toUpperCase() + product.id.slice(1)}
+                </Button>
+              ))}
+            </div>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
             <Link to="/auth">
               <Button size="lg" className="w-full sm:w-auto px-8">
@@ -123,7 +165,8 @@ export default function Index() {
             {tradeProducts.map((product) => (
               <div
                 key={product.id}
-                className="p-6 rounded-xl border border-border bg-card hover:shadow-lg transition-shadow"
+                className="p-6 rounded-xl border border-border bg-card hover:shadow-lg hover:border-primary/50 transition-all cursor-pointer group"
+                onClick={() => handleSelectTrade(product.id)}
               >
                 <div
                   className="w-12 h-12 rounded-lg flex items-center justify-center mb-4"
@@ -136,14 +179,23 @@ export default function Index() {
                 </div>
                 <h3 className="font-bold text-lg mb-1">{product.name}</h3>
                 <p className="text-sm text-muted-foreground mb-4">{product.tagline}</p>
-                <ul className="space-y-2">
+                <ul className="space-y-2 mb-4">
                   {product.features.map((feature, idx) => (
                     <li key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
-                      <CheckCircle className="w-3 h-3 mt-0.5 text-primary shrink-0" />
+                      <CheckCircle className="w-3 h-3 mt-0.5 shrink-0" style={{ color: `hsl(${product.primaryHue} 70% 45%)` }} />
                       {feature}
                     </li>
                   ))}
                 </ul>
+                <Button 
+                  className="w-full group-hover:opacity-100 opacity-80 transition-opacity"
+                  style={{ 
+                    backgroundColor: `hsl(${product.primaryHue} 70% 45%)`,
+                    color: 'white'
+                  }}
+                >
+                  Select {product.id.charAt(0).toUpperCase() + product.id.slice(1)}
+                </Button>
               </div>
             ))}
           </div>
@@ -154,14 +206,17 @@ export default function Index() {
       <section className="py-16 bg-hero-gradient text-primary-foreground">
         <div className="container text-center max-w-2xl">
           <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Save Time?</h2>
-          <p className="text-primary-foreground/80 mb-8">
-            Join thousands of UK tradespeople who've ditched paper quotes.
+          <p className="text-primary-foreground/80 mb-6">
+            Join UK tradespeople who've ditched paper quotes.
           </p>
           <Link to="/auth">
             <Button size="lg" variant="secondary" className="px-8">
               Get Started Free <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
+          <p className="text-sm text-primary-foreground/60 mt-4">
+            7-day free trial • Cancel anytime • From £15/month
+          </p>
         </div>
       </section>
 
