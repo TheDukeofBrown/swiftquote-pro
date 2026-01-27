@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBrand } from "@/contexts/BrandContext";
+import { platformBrand } from "@/config/brands";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -89,9 +90,9 @@ export default function Auth() {
 
         <Card>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Welcome</CardTitle>
+            <CardTitle className="text-2xl text-center">Welcome to {platformBrand.name}</CardTitle>
             <CardDescription className="text-center">
-              Sign in to your account or create a new one
+              Create your {platformBrand.name} account or sign in
             </CardDescription>
           </CardHeader>
           <CardContent>

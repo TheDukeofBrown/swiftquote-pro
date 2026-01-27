@@ -184,7 +184,7 @@ export default function Onboarding() {
       await refetch();
       toast({
         title: "Setup complete!",
-        description: `Welcome to ${selectedBrand?.name || "QuoteTrack"}. Let's create your first quote.`,
+        description: `Welcome to ${selectedBrand?.name || "SwiftQuote"}. Let's create your first quote.`,
       });
       navigate("/dashboard");
     } catch (err: any) {
@@ -221,7 +221,7 @@ export default function Onboarding() {
           >
             <ArrowLeft className="mr-2 w-4 h-4" /> Back to Home
           </Button>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Set Up Your Business</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Set Up Your {selectedBrand?.name || "SwiftQuote"}</h1>
           <p className="text-muted-foreground">Quick setup — you'll be quoting in under 60 seconds</p>
         </div>
 
@@ -242,7 +242,7 @@ export default function Onboarding() {
           <Card className="animate-slide-up">
             <CardHeader>
               <CardTitle>Select Your Trade</CardTitle>
-              <CardDescription>Choose your trade to get a branded experience</CardDescription>
+              <CardDescription>Choose your trade to get your branded SwiftQuote experience</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 gap-3">
