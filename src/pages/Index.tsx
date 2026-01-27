@@ -3,33 +3,45 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { Button } from "@/components/ui/button";
-import BrandLogo from "@/components/BrandLogo";
-import { ArrowRight, CheckCircle, Zap, Shield, Loader2, Droplets, HardHat, PaintBucket, Paintbrush, Home } from "lucide-react";
-import { useEffect } from "react";
+import { ArrowRight, CheckCircle, Zap, FileText, Eye, Brain, Loader2, Droplets, HardHat, PaintBucket, Paintbrush, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { brands, BrandConfig, platformBrand } from "@/config/brands";
 import type { Database } from "@/integrations/supabase/types";
 
 type TradeType = Database["public"]["Enums"]["trade_type"];
 
-const tradeHeroSubtext: Record<TradeType, string> = {
-  plumber: "Built for busy plumbers who want to quote faster and win more jobs.",
-  electrician: "Built for busy electricians. Professional quotes for installations, testing, and compliance.",
-  plasterer: "Built for busy plasterers. Clean, simple quotes for room skims and day rates.",
-  builder: "Built for busy builders. Multi-line quotes without spreadsheets.",
-  painter: "Built for painters & decorators. Fast quotes for rooms, prep, and materials.",
-  roofer: "Built for busy roofers. Quote repairs, replacements, and scaffolding in seconds.",
+const tradeCardCopy: Record<TradeType, { tagline: string; cta: string }> = {
+  plumber: {
+    tagline: "Fast, professional plumbing quotes — sent on site.",
+    cta: "For Plumbers",
+  },
+  electrician: {
+    tagline: "Clear electrical quotes that look professional and win work.",
+    cta: "For Electricians",
+  },
+  plasterer: {
+    tagline: "Simple, clean quotes clients understand instantly.",
+    cta: "For Plasterers",
+  },
+  builder: {
+    tagline: "Multi-line building quotes without spreadsheets.",
+    cta: "For Builders",
+  },
+  painter: {
+    tagline: "Straightforward decorating quotes, priced properly.",
+    cta: "For Painters",
+  },
+  roofer: {
+    tagline: "Fast roofing quotes without paperwork.",
+    cta: "For Roofers",
+  },
 };
 
-const genericSubtext = "Choose your trade to get a quoting experience built specifically for your work.";
-
 export default function Index() {
-  const { user, loading: authLoading } = useAuth();
-  const { company, loading: companyLoading } = useCompany();
+  const { loading: authLoading } = useAuth();
+  const { loading: companyLoading } = useCompany();
   const { brand, selectBrand } = useBrand();
   const navigate = useNavigate();
-
-  // No auto-redirect - let users view the homepage even if logged in
 
   if (authLoading || companyLoading) {
     return (
@@ -52,9 +64,6 @@ export default function Index() {
     selectBrand(tradeId);
     navigate("/auth");
   };
-
-  // Get trade-specific or generic subtext
-  const heroSubtext = brand.id ? tradeHeroSubtext[brand.id] : genericSubtext;
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,89 +90,52 @@ export default function Index() {
         <div className="container text-center max-w-3xl">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in">
             {platformBrand.name}
-            <br />
-            <span className="text-gradient">Professional Quotes in Under 60 Seconds</span>
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            {heroSubtext}
+          <p className="text-xl md:text-2xl font-medium text-foreground mb-4 animate-fade-in" style={{ animationDelay: "0.05s" }}>
+            Professional quotes for trades — in under 60 seconds.
+          </p>
+          <div className="text-lg text-muted-foreground mb-6 animate-fade-in space-y-1" style={{ animationDelay: "0.1s" }}>
+            <p>No paperwork.</p>
+            <p>No spreadsheets.</p>
+            <p>No evenings lost to admin.</p>
+          </div>
+          <p className="text-base text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "0.15s" }}>
+            Built for busy trades who just want to get the job priced and sent.
           </p>
           
-          {/* Trade Selection Buttons */}
-          <div className="mb-8 animate-fade-in" style={{ animationDelay: "0.15s" }}>
-            <p className="text-sm font-medium text-muted-foreground mb-4">Choose your trade to get started</p>
-            <div className="flex flex-wrap justify-center gap-3">
-              {tradeProducts.map((product) => (
-                <Button
-                  key={product.id}
-                  variant={brand.id === product.id ? "default" : "outline"}
-                  className="gap-2"
-                  onClick={() => handleSelectTrade(product.id)}
-                >
-                  <product.Icon 
-                    className="w-4 h-4" 
-                    style={brand.id !== product.id ? { color: `hsl(${product.primaryHue} 70% 45%)` } : undefined}
-                  />
-                  {product.id.charAt(0).toUpperCase() + product.id.slice(1)}
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
-            <Link to="/auth">
-              <Button size="lg" className="w-full sm:w-auto px-8">
-                Start Free <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+          <div className="flex justify-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <Button size="lg" className="px-8" onClick={() => document.getElementById('trade-selector')?.scrollIntoView({ behavior: 'smooth' })}>
+              Choose Your Trade <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="py-16 bg-muted/30">
-        <div className="container">
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center animate-slide-up">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Lightning Fast</h3>
-              <p className="text-muted-foreground">
-                Create professional quotes in seconds, not hours. Pre-filled templates for your trade.
-              </p>
-            </div>
-            <div className="text-center animate-slide-up" style={{ animationDelay: "0.1s" }}>
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Track Everything</h3>
-              <p className="text-muted-foreground">
-                Know when quotes are viewed and accepted. Never lose track of a job again.
-              </p>
-            </div>
-            <div className="text-center animate-slide-up" style={{ animationDelay: "0.2s" }}>
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Look Professional</h3>
-              <p className="text-muted-foreground">
-                Impress customers with clean, branded quotes that build trust and win jobs.
-              </p>
-            </div>
-          </div>
+      {/* Sub-Hero (Clarity) */}
+      <section className="py-12 bg-muted/30">
+        <div className="container text-center max-w-2xl">
+          <p className="text-lg md:text-xl text-foreground mb-4">
+            Quoting shouldn't slow your business down.
+          </p>
+          <p className="text-muted-foreground mb-6">
+            WorkQuote gives you a trade-specific quoting tool, built around how you actually work.
+          </p>
+          <p className="text-sm font-medium text-primary">
+            Select your trade below to get started.
+          </p>
         </div>
       </section>
 
-      {/* Trade Products */}
-      <section className="py-16">
+      {/* Trade Selector */}
+      <section id="trade-selector" className="py-16">
         <div className="container">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">One Platform. Multiple Trade-Specific Quoting Tools.</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">One platform. Trade-specific quoting tools.</h2>
             <p className="text-muted-foreground">
-              Choose your trade and get a fully branded quoting experience
+              Each trade gets its own experience, pricing defaults, and language — all powered by WorkQuote.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {tradeProducts.map((product) => (
               <div
                 key={product.id}
@@ -179,16 +151,10 @@ export default function Index() {
                     style={{ color: `hsl(${product.primaryHue} 70% 45%)` }}
                   />
                 </div>
-                <h3 className="font-bold text-lg mb-1">{product.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{product.tagline}</p>
-                <ul className="space-y-2 mb-4">
-                  {product.features.map((feature, idx) => (
-                    <li key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
-                      <CheckCircle className="w-3 h-3 mt-0.5 shrink-0" style={{ color: `hsl(${product.primaryHue} 70% 45%)` }} />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+                <h3 className="font-bold text-lg mb-2">{product.name}</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {tradeCardCopy[product.id].tagline}
+                </p>
                 <Button 
                   className="w-full group-hover:opacity-100 opacity-80 transition-opacity"
                   style={{ 
@@ -196,7 +162,7 @@ export default function Index() {
                     color: 'white'
                   }}
                 >
-                  Select {product.id.charAt(0).toUpperCase() + product.id.slice(1)}
+                  {tradeCardCopy[product.id].cta}
                 </Button>
               </div>
             ))}
@@ -204,29 +170,117 @@ export default function Index() {
         </div>
       </section>
 
+      {/* Features */}
+      <section className="py-16 bg-muted/30">
+        <div className="container">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">Why trades use WorkQuote</h2>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
+            <div className="text-center animate-slide-up">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Quote in minutes</h3>
+              <p className="text-muted-foreground text-sm">
+                Create and send professional quotes from your phone.
+              </p>
+            </div>
+            <div className="text-center animate-slide-up" style={{ animationDelay: "0.1s" }}>
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Look professional</h3>
+              <p className="text-muted-foreground text-sm">
+                Clean, branded PDFs customers trust.
+              </p>
+            </div>
+            <div className="text-center animate-slide-up" style={{ animationDelay: "0.2s" }}>
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Eye className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Stay in control</h3>
+              <p className="text-muted-foreground text-sm">
+                See when quotes are viewed and accepted.
+              </p>
+            </div>
+            <div className="text-center animate-slide-up" style={{ animationDelay: "0.3s" }}>
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Brain className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Built for trades</h3>
+              <p className="text-muted-foreground text-sm">
+                Defaults, language, and pricing that match your work.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-16">
+        <div className="container">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">How it works</h2>
+          </div>
+          <div className="max-w-2xl mx-auto">
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">1</div>
+                <p className="text-lg">Choose your trade</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">2</div>
+                <p className="text-lg">Set your prices once</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">3</div>
+                <p className="text-lg">Build and send quotes on site</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold shrink-0">4</div>
+                <p className="text-lg">Get accepted faster</p>
+              </div>
+            </div>
+            <p className="text-center text-muted-foreground mt-8 text-lg font-medium">That's it.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Teaser */}
+      <section className="py-16 bg-muted/30">
+        <div className="container text-center max-w-xl">
+          <h2 className="text-2xl font-bold mb-4">Simple pricing.</h2>
+          <p className="text-muted-foreground mb-2">7-day free trial.</p>
+          <p className="text-muted-foreground mb-6">Cancel anytime.</p>
+          <p className="text-xl font-semibold text-foreground">From £15 per month.</p>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-16 bg-hero-gradient text-primary-foreground">
         <div className="container text-center max-w-2xl">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to Save Time?</h2>
-          <p className="text-primary-foreground/80 mb-6">
-            Join UK tradespeople who've ditched paper quotes.
-          </p>
-          <Link to="/auth">
-            <Button size="lg" variant="secondary" className="px-8">
-              Get Started Free <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </Link>
-          <p className="text-sm text-primary-foreground/60 mt-4">
-            7-day free trial • Cancel anytime • From £15/month
-          </p>
+          <h2 className="text-2xl md:text-3xl font-bold mb-2">Stop losing time to admin.</h2>
+          <p className="text-xl text-primary-foreground/90 mb-8">Start quoting properly.</p>
+          <Button 
+            size="lg" 
+            variant="secondary" 
+            className="px-8"
+            onClick={() => document.getElementById('trade-selector')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            Choose Your Trade & Get Started <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
         </div>
       </section>
 
       {/* Footer */}
       <footer className="py-8 border-t border-border">
         <div className="container text-center">
+          <p className="text-sm text-muted-foreground mb-1">
+            © {new Date().getFullYear()} {platformBrand.name}
+          </p>
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} {platformBrand.name}. Built for UK trades.
+            Professional quoting tools for UK trades.
           </p>
         </div>
       </footer>
