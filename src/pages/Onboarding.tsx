@@ -86,6 +86,14 @@ export default function Onboarding() {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <div className="w-full max-w-lg animate-fade-in">
         <div className="text-center mb-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/")}
+            className="mb-4"
+          >
+            <ArrowLeft className="mr-2 w-4 h-4" /> Back to Home
+          </Button>
           <h1 className="text-3xl font-bold text-foreground mb-2">Set Up Your Business</h1>
           <p className="text-muted-foreground">Quick setup to get you quoting in under a minute</p>
         </div>
