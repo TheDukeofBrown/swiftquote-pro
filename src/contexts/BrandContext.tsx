@@ -62,7 +62,9 @@ export function BrandProvider({ children }: { children: ReactNode }) {
   // Company trade takes precedence over manual selection
   const trade = company?.trade as TradeType | null;
   const effectiveTrade = trade || manualBrandId;
-  const brand = effectiveTrade ? brands[effectiveTrade] : defaultBrand;
+  
+  // Safely get brand with fallback to defaultBrand
+  const brand = effectiveTrade && brands[effectiveTrade] ? brands[effectiveTrade] : defaultBrand;
   const isTradeSpecific = brand.id !== null;
 
   const selectBrand = (tradeId: TradeType) => {
