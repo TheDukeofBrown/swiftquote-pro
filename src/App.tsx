@@ -15,9 +15,12 @@ import Dashboard from "./pages/Dashboard";
 import QuoteBuilder from "./pages/QuoteBuilder";
 import QuotesList from "./pages/QuotesList";
 import QuoteDetail from "./pages/QuoteDetail";
+import QuoteSent from "./pages/QuoteSent";
 import Settings from "./pages/Settings";
 import Billing from "./pages/Billing";
 import QuoteView from "./pages/QuoteView";
+import PlumbersLanding from "./pages/PlumbersLanding";
+import ElectriciansLanding from "./pages/ElectriciansLanding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +37,8 @@ const App = () => (
               <SubscriptionProvider>
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/plumbers" element={<PlumbersLanding />} />
+                  <Route path="/electricians" element={<ElectriciansLanding />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route
                     path="/onboarding"
@@ -72,6 +77,14 @@ const App = () => (
                     element={
                       <ProtectedRoute requireCompany>
                         <QuoteDetail />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/quotes/:id/sent"
+                    element={
+                      <ProtectedRoute requireCompany>
+                        <QuoteSent />
                       </ProtectedRoute>
                     }
                   />

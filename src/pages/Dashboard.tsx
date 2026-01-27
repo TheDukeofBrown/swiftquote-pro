@@ -12,6 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import BrandLogo from "@/components/BrandLogo";
 import { UsageDisplay } from "@/components/UsageDisplay";
 import { ReadOnlyGuard } from "@/components/FeatureGate";
+import { QuickQuoteModal } from "@/components/QuickQuoteModal";
+import { PriceLibrarySetupModal } from "@/components/PriceLibrarySetupModal";
 import {
   FileText,
   Plus,
@@ -48,6 +50,9 @@ export default function Dashboard() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [loading, setLoading] = useState(true);
   const [priceItemCount, setPriceItemCount] = useState(0);
+  const [quickQuoteOpen, setQuickQuoteOpen] = useState(false);
+  const [librarySetupOpen, setLibrarySetupOpen] = useState(false);
+  const [librarySetupDismissed, setLibrarySetupDismissed] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     sent: 0,
@@ -181,33 +186,56 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Price Library Prompt */}
-        {priceItemCount === 0 && !loading && (
+        {/* Price Library Prompt - show if empty and not dismissed */}
+        {priceItemCount === 0 && !loading && !librarySetupDismissed && (
           <div className="bg-primary/5 border border-primary/20 rounded-lg px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2 text-primary">
               <Library className="w-4 h-4" />
               <span className="text-sm">
-                Add your default prices to quote faster
+                Set up your default prices to quote 10x faster
               </span>
             </div>
-            <Link to="/settings?tab=library">
-              <Button size="sm" variant="outline">Set Defaults</Button>
-            </Link>
+            <div className="flex gap-2">
+              <Button 
+                size="sm" 
+                variant="ghost"
+                onClick={() => setLibrarySetupDismissed(true)}
+              >
+                Later
+              </Button>
+              <Button 
+                size="sm"
+                onClick={() => setLibrarySetupOpen(true)}
+              >
+                <Zap className="w-3 h-3 mr-1" />
+                Set Up
+              </Button>
+            </div>
           </div>
         )}
 
-        {/* Hero CTA */}
+        {/* Hero CTA - Create New Quote is PRIMARY */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground">Welcome back, here's your overview</p>
           </div>
-          <Link to="/quotes/new">
-            <Button size="lg" className="w-full sm:w-auto gap-2" disabled={isReadOnly || !canCreateQuote()}>
-              <Zap className="w-4 h-4" />
-              New Quote
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setQuickQuoteOpen(true)}
+              disabled={isReadOnly || !canCreateQuote()}
+            >
+              <Zap className="w-4 h-4 mr-1" />
+              Quick Quote
             </Button>
-          </Link>
+            <Link to="/quotes/new">
+              <Button size="lg" className="gap-2" disabled={isReadOnly || !canCreateQuote()}>
+                <Plus className="w-4 h-4" />
+                Create New Quote
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Stats */}
@@ -341,6 +369,23 @@ export default function Dashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* Quick Quote Modal */}
+        <QuickQuoteModal open={quickQuoteOpen} onOpenChange={setQuickQuoteOpen} />
+
+        {/* Price Library Setup Modal */}
+        <PriceLibrarySetupModal
+          open={librarySetupOpen}
+          onOpenChange={setLibrarySetupOpen}
+          onSkip={() => {
+            setLibrarySetupOpen(false);
+            setLibrarySetupDismissed(true);
+          }}
+          onComplete={() => {
+            setLibrarySetupOpen(false);
+            fetchPriceItemCount();
+          }}
+        />
       </main>
     </div>
   );
