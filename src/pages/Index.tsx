@@ -7,7 +7,7 @@ import BrandLogo from "@/components/BrandLogo";
 import { ArrowRight, CheckCircle, Zap, Shield, Loader2, Droplets, HardHat, PaintBucket, Paintbrush, Home } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { brands, BrandConfig } from "@/config/brands";
+import { brands, BrandConfig, platformBrand } from "@/config/brands";
 import type { Database } from "@/integrations/supabase/types";
 
 type TradeType = Database["public"]["Enums"]["trade_type"];
@@ -21,7 +21,7 @@ const tradeHeroSubtext: Record<TradeType, string> = {
   roofer: "Built for busy roofers. Quote repairs, replacements, and scaffolding in seconds.",
 };
 
-const genericSubtext = "Built for builders, plumbers, electricians, and plasterers.";
+const genericSubtext = "Choose your trade to get a quoting experience built for you.";
 
 export default function Index() {
   const { user, loading: authLoading } = useAuth();
@@ -61,7 +61,10 @@ export default function Index() {
       {/* Header */}
       <header className="border-b border-border">
         <div className="container flex items-center justify-between h-16">
-          <BrandLogo />
+          <div className="flex items-center gap-2">
+            <Zap className="w-6 h-6 text-primary" />
+            <span className="font-bold text-xl">{platformBrand.name}</span>
+          </div>
           <div className="flex items-center gap-3">
             <Link to="/auth">
               <Button variant="ghost">Login</Button>
@@ -77,9 +80,9 @@ export default function Index() {
       <section className="py-16 md:py-24">
         <div className="container text-center max-w-3xl">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in">
-            Professional Quotes
+            {platformBrand.name}
             <br />
-            <span className="text-gradient">In Under 60 Seconds</span>
+            <span className="text-gradient">Professional Quotes in Under 60 Seconds</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "0.1s" }}>
             {heroSubtext}
@@ -223,7 +226,7 @@ export default function Index() {
       <footer className="py-8 border-t border-border">
         <div className="container text-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} {brand.name}. Built for UK tradespeople.
+            © {new Date().getFullYear()} {platformBrand.name}. Built for UK tradespeople.
           </p>
         </div>
       </footer>

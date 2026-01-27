@@ -158,15 +158,22 @@ export const brands: Record<TradeType, BrandConfig> = {
   },
 };
 
+// Platform brand - SwiftQuote is the master brand
+export const platformBrand = {
+  name: "SwiftQuote",
+  tagline: "Professional Quotes in Under 60 Seconds",
+  description: "The quoting platform built for UK tradespeople",
+};
+
 // Default brand for unauthenticated users or landing page
 export const defaultBrand: Omit<BrandConfig, "id"> & { id: null } = {
   id: null,
-  name: "QuoteTrack",
-  tagline: "Professional quotes for UK tradespeople",
-  description: "Create professional quotes in under 60 seconds",
+  name: "SwiftQuote",
+  tagline: "Professional Quotes in Under 60 Seconds",
+  description: "The quoting platform built for UK tradespeople",
   primaryHue: 220,
   accentHue: 210,
-  icon: "FileText",
+  icon: "Zap",
   features: [
     "60-second quote creation",
     "Professional PDF output",
