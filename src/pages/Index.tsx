@@ -41,7 +41,7 @@ export default function Index() {
             <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
               <FileText className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-bold text-foreground">QuoteForge</span>
+            <span className="text-xl font-bold text-foreground">QuoteTrack</span>
           </div>
           <Link to="/auth">
             <Button>Get Started</Button>
@@ -145,7 +145,7 @@ export default function Index() {
       <footer className="py-8 border-t border-border">
         <div className="container text-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} QuoteForge. Built for UK tradespeople.
+            © {new Date().getFullYear()} QuoteTrack. Built for UK tradespeople.
           </p>
         </div>
       </footer>
