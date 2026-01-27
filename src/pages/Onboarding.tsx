@@ -61,9 +61,12 @@ const tradeDefaultItems: Record<TradeType, DefaultPriceItem[]> = {
   builder: [
     { name: "Day rate (labourer)", type: "labour", unit: "day", unit_price: 150 },
     { name: "Day rate (skilled)", type: "labour", unit: "day", unit_price: 220 },
-    { name: "Labour rate", type: "labour", unit: "hour", unit_price: 45 },
-    { name: "Skip hire", type: "material", unit: "each", unit_price: 250 },
-    { name: "Weekend uplift", type: "uplift", unit: "percent", unit_price: 25 },
+    { name: "Site setup / prelims", type: "service", unit: "each", unit_price: 500 },
+    { name: "Demolition / strip out", type: "service", unit: "each", unit_price: 800 },
+    { name: "Groundworks allowance", type: "material", unit: "each", unit_price: 2500 },
+    { name: "Materials allowance", type: "material", unit: "each", unit_price: 1000 },
+    { name: "Waste / skip allowance", type: "material", unit: "each", unit_price: 350 },
+    { name: "Contingency", type: "uplift", unit: "percent", unit_price: 10 },
   ],
 };
 

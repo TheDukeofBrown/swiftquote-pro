@@ -162,7 +162,7 @@ function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[]): j
     plumber: [56, 189, 248], // Blue
     electrician: [59, 130, 246], // Navy / Electric blue
     plasterer: [100, 116, 139], // Neutral grey / Slate
-    builder: [71, 85, 105], // Dark slate
+    builder: [51, 65, 85], // Slate / charcoal
   };
   const brandColor = tradeColors[company.trade] || [100, 116, 139];
 

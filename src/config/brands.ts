@@ -89,23 +89,25 @@ export const brands: Record<TradeType, BrandConfig> = {
   builder: {
     id: "builder",
     name: "BuildQuote",
-    tagline: "Build trust with professional quotes",
-    description: "Complete quoting solution for builders & contractors",
-    primaryHue: 220, // Slate blue
-    accentHue: 210,
+    tagline: "Professional building quotes in under 60 seconds",
+    description: "Built for busy builders who want less admin and more building",
+    primaryHue: 215, // Slate / charcoal
+    accentHue: 25, // Orange accent (subtle)
     icon: "HardHat",
     features: [
-      "Extension calculators",
-      "Multi-trade coordination",
-      "Project phasing",
+      "Multi-line quotes without spreadsheets",
+      "Section grouping for large jobs",
+      "Clean, professional PDFs",
     ],
     defaultLabourRate: 45,
     defaultItems: [
       { description: "Day rate (labourer)", unitPrice: 150, itemType: "labour" },
       { description: "Day rate (skilled)", unitPrice: 220, itemType: "labour" },
-      { description: "Wall construction (per sq metre)", unitPrice: 120, itemType: "labour" },
-      { description: "Foundation work", unitPrice: 2500, itemType: "labour" },
-      { description: "Bricks (per 1000)", unitPrice: 450, itemType: "material" },
+      { description: "Site setup / prelims", unitPrice: 500, itemType: "labour" },
+      { description: "Demolition / strip out", unitPrice: 800, itemType: "labour" },
+      { description: "Groundworks allowance", unitPrice: 2500, itemType: "material" },
+      { description: "Materials allowance", unitPrice: 1000, itemType: "material" },
+      { description: "Waste / skip allowance", unitPrice: 350, itemType: "material" },
     ],
   },
 };

@@ -16,7 +16,7 @@ const tradeHeroSubtext: Record<TradeType, string> = {
   plumber: "Built for busy plumbers who want to quote faster and win more jobs.",
   electrician: "Built for busy electricians. Professional quotes for installations, testing, and compliance.",
   plasterer: "Built for busy plasterers. Clean, simple quotes for room skims and day rates.",
-  builder: "Built for builders who want to spend less time quoting and more time building.",
+  builder: "Built for busy builders. Multi-line quotes without spreadsheets.",
 };
 
 const genericSubtext = "Built for builders, plumbers, electricians, and plasterers.";
