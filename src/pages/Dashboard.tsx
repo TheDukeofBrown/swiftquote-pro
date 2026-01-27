@@ -175,7 +175,7 @@ export default function Dashboard() {
                 Your trial ends in {trialDaysRemaining} day{trialDaysRemaining !== 1 ? "s" : ""}
               </span>
             </div>
-            <Link to="/settings?tab=billing">
+            <Link to="/billing">
               <Button size="sm" variant="outline">Upgrade Now</Button>
             </Link>
           </div>

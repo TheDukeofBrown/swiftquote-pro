@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Clock, Zap, Crown, FileText, Download } from "lucide-react";
+import { Clock, Zap, Crown, FileText } from "lucide-react";
 import { getPlanInfo } from "@/config/plans";
 import { cn } from "@/lib/utils";
 
@@ -14,20 +14,18 @@ interface UsageDisplayProps {
 
 export function UsageDisplay({ compact = false }: UsageDisplayProps) {
   const { 
-    plan, 
+    plan,
+    tier,
     quotesUsed, 
     quotesLimit, 
-    pdfsUsed, 
-    pdfsLimit,
     isTrialing,
     trialDaysRemaining 
   } = useSubscription();
   
   const planInfo = getPlanInfo(plan);
   const quotesPercentage = quotesLimit === -1 ? 0 : (quotesUsed / quotesLimit) * 100;
-  const pdfsPercentage = pdfsLimit === -1 ? 0 : (pdfsUsed / pdfsLimit) * 100;
   
-  const PlanIcon = plan === "business" ? Crown : plan === "pro" ? Zap : Clock;
+  const PlanIcon = tier === "team" ? Crown : tier === "pro" ? Zap : Clock;
   
   if (compact) {
     return (
@@ -56,8 +54,8 @@ export function UsageDisplay({ compact = false }: UsageDisplayProps) {
             <PlanIcon className="w-4 h-4" />
             {planInfo.name} Plan
           </CardTitle>
-          {plan !== "business" && (
-            <Link to="/settings?tab=billing">
+          {tier !== "team" && (
+            <Link to="/billing">
               <Button variant="outline" size="sm">Upgrade</Button>
             </Link>
           )}
@@ -87,29 +85,6 @@ export function UsageDisplay({ compact = false }: UsageDisplayProps) {
                 "h-2",
                 quotesPercentage > 80 && "bg-warning/20",
                 quotesPercentage >= 100 && "bg-destructive/20"
-              )}
-            />
-          )}
-        </div>
-        
-        {/* PDF usage */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2 text-muted-foreground">
-              <Download className="w-4 h-4" />
-              PDF downloads this month
-            </span>
-            <span className="font-medium">
-              {pdfsUsed} / {pdfsLimit === -1 ? "Unlimited" : pdfsLimit}
-            </span>
-          </div>
-          {pdfsLimit !== -1 && (
-            <Progress 
-              value={pdfsPercentage} 
-              className={cn(
-                "h-2",
-                pdfsPercentage > 80 && "bg-warning/20",
-                pdfsPercentage >= 100 && "bg-destructive/20"
               )}
             />
           )}

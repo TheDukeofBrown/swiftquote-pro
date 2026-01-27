@@ -288,10 +288,10 @@ export default function Settings() {
                               : `${planOption.limits.pdfDownloads} PDFs/month`
                             }
                           </li>
-                          {planOption.limits.features.customBranding && (
+                          {planOption.limits.features.priceLibrary && (
                             <li className="flex items-center gap-2">
                               <Check className="w-4 h-4 text-success" />
-                              Custom branding
+                              Price library
                             </li>
                           )}
                           {planOption.limits.features.emailSending && (
@@ -300,10 +300,10 @@ export default function Settings() {
                               Email sending
                             </li>
                           )}
-                          {planOption.limits.features.multiUser && (
+                          {planOption.limits.features.teamMembers > 1 && (
                             <li className="flex items-center gap-2">
                               <Check className="w-4 h-4 text-success" />
-                              Multi-user access
+                              Up to {planOption.limits.features.teamMembers} team members
                             </li>
                           )}
                         </ul>

@@ -52,7 +52,7 @@ export default function QuoteDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { company } = useCompany();
-  const { canDownloadPdf, pdfsUsed, pdfsLimit, refetch: refetchSubscription } = useSubscription();
+  const { isActive, refetch: refetchSubscription } = useSubscription();
   const { toast } = useToast();
   
   const [quote, setQuote] = useState<Quote | null>(null);
@@ -137,10 +137,10 @@ export default function QuoteDetail() {
   const downloadPdf = async () => {
     if (!quote) return;
     
-    if (!canDownloadPdf()) {
+    if (!isActive) {
       toast({
-        title: "PDF limit reached",
-        description: `You've used ${pdfsUsed} of ${pdfsLimit} PDFs this month. Upgrade for more.`,
+        title: "Subscription required",
+        description: "Please subscribe to download PDFs.",
         variant: "destructive",
       });
       return;
