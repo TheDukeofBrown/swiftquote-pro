@@ -21,7 +21,7 @@ const tradeHeroSubtext: Record<TradeType, string> = {
   roofer: "Built for busy roofers. Quote repairs, replacements, and scaffolding in seconds.",
 };
 
-const genericSubtext = "Choose your trade to get a quoting experience built for you.";
+const genericSubtext = "Choose your trade to get a quoting experience built specifically for your work.";
 
 export default function Index() {
   const { user, loading: authLoading } = useAuth();
@@ -158,7 +158,7 @@ export default function Index() {
       <section className="py-16">
         <div className="container">
           <div className="text-center max-w-2xl mx-auto mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">One Platform, Six Brands</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">One Platform. Multiple Trade-Specific Quoting Tools.</h2>
             <p className="text-muted-foreground">
               Choose your trade and get a fully branded quoting experience
             </p>
@@ -226,7 +226,7 @@ export default function Index() {
       <footer className="py-8 border-t border-border">
         <div className="container text-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} {platformBrand.name}. Built for UK tradespeople.
+            © {new Date().getFullYear()} {platformBrand.name}. Built for UK trades.
           </p>
         </div>
       </footer>
