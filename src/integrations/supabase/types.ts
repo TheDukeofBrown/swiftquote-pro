@@ -100,6 +100,53 @@ export type Database = {
           },
         ]
       }
+      price_items: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          sort_order: number
+          type: Database["public"]["Enums"]["price_item_type"]
+          unit: Database["public"]["Enums"]["price_item_unit"]
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          sort_order?: number
+          type?: Database["public"]["Enums"]["price_item_type"]
+          unit?: Database["public"]["Enums"]["price_item_unit"]
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          sort_order?: number
+          type?: Database["public"]["Enums"]["price_item_type"]
+          unit?: Database["public"]["Enums"]["price_item_unit"]
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_items_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_items: {
         Row: {
           created_at: string
@@ -333,6 +380,8 @@ export type Database = {
       }
     }
     Enums: {
+      price_item_type: "labour" | "material" | "service" | "uplift"
+      price_item_unit: "each" | "hour" | "percent" | "metre" | "day"
       quote_status: "draft" | "sent" | "viewed" | "accepted" | "declined"
       subscription_plan: "free" | "pro" | "business"
       subscription_status:
@@ -469,6 +518,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      price_item_type: ["labour", "material", "service", "uplift"],
+      price_item_unit: ["each", "hour", "percent", "metre", "day"],
       quote_status: ["draft", "sent", "viewed", "accepted", "declined"],
       subscription_plan: ["free", "pro", "business"],
       subscription_status: [

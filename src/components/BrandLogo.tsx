@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { FileText, Droplets, Zap, PaintBucket, HardHat } from "lucide-react";
 import { useBrand } from "@/contexts/BrandContext";
 import { cn } from "@/lib/utils";
@@ -22,25 +23,31 @@ const sizeClasses = {
   lg: { container: "w-10 h-10", icon: "w-6 h-6", text: "text-2xl" },
 };
 
-export default function BrandLogo({ size = "md", showText = true, className }: BrandLogoProps) {
-  const { brand } = useBrand();
-  
-  const Icon = iconMap[brand.icon as keyof typeof iconMap] || FileText;
-  const sizes = sizeClasses[size];
+const BrandLogo = forwardRef<HTMLDivElement, BrandLogoProps>(
+  ({ size = "md", showText = true, className }, ref) => {
+    const { brand } = useBrand();
+    
+    const Icon = iconMap[brand.icon as keyof typeof iconMap] || FileText;
+    const sizes = sizeClasses[size];
 
-  return (
-    <div className={cn("flex items-center gap-2", className)}>
-      <div className={cn(
-        "rounded-lg bg-primary flex items-center justify-center",
-        sizes.container
-      )}>
-        <Icon className={cn("text-primary-foreground", sizes.icon)} />
+    return (
+      <div ref={ref} className={cn("flex items-center gap-2", className)}>
+        <div className={cn(
+          "rounded-lg bg-primary flex items-center justify-center",
+          sizes.container
+        )}>
+          <Icon className={cn("text-primary-foreground", sizes.icon)} />
+        </div>
+        {showText && (
+          <span className={cn("font-bold text-foreground", sizes.text)}>
+            {brand.name}
+          </span>
+        )}
       </div>
-      {showText && (
-        <span className={cn("font-bold text-foreground", sizes.text)}>
-          {brand.name}
-        </span>
-      )}
-    </div>
-  );
-}
+    );
+  }
+);
+
+BrandLogo.displayName = "BrandLogo";
+
+export default BrandLogo;

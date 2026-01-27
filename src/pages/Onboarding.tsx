@@ -8,12 +8,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, HardHat, Droplets, Zap, PaintBucket, ArrowRight, ArrowLeft } from "lucide-react";
+import { Loader2, HardHat, Droplets, Zap, PaintBucket, ArrowRight, ArrowLeft, Plus, Trash2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { brands } from "@/config/brands";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Database } from "@/integrations/supabase/types";
 
 type TradeType = Database["public"]["Enums"]["trade_type"];
+type PriceItemUnit = "each" | "hour" | "percent" | "metre" | "day";
+type PriceItemType = "labour" | "material" | "service" | "uplift";
+
+interface DefaultPriceItem {
+  name: string;
+  type: PriceItemType;
+  unit: PriceItemUnit;
+  unit_price: number;
+}
 
 const tradeOptions: { id: TradeType; name: string; brandName: string; icon: typeof HardHat; description: string; primaryHue: number }[] = [
   { id: "plumber", name: "Plumber", brandName: brands.plumber.name, icon: Droplets, description: brands.plumber.tagline, primaryHue: brands.plumber.primaryHue },
@@ -21,6 +31,38 @@ const tradeOptions: { id: TradeType; name: string; brandName: string; icon: type
   { id: "plasterer", name: "Plasterer", brandName: brands.plasterer.name, icon: PaintBucket, description: brands.plasterer.tagline, primaryHue: brands.plasterer.primaryHue },
   { id: "builder", name: "Builder", brandName: brands.builder.name, icon: HardHat, description: brands.builder.tagline, primaryHue: brands.builder.primaryHue },
 ];
+
+// Default price items by trade
+const tradeDefaultItems: Record<TradeType, DefaultPriceItem[]> = {
+  plumber: [
+    { name: "Call-out charge", type: "service", unit: "each", unit_price: 60 },
+    { name: "Labour rate", type: "labour", unit: "hour", unit_price: 55 },
+    { name: "Boiler service", type: "service", unit: "each", unit_price: 120 },
+    { name: "Radiator install", type: "service", unit: "each", unit_price: 180 },
+    { name: "Emergency uplift", type: "uplift", unit: "percent", unit_price: 50 },
+  ],
+  electrician: [
+    { name: "Call-out charge", type: "service", unit: "each", unit_price: 50 },
+    { name: "Labour rate", type: "labour", unit: "hour", unit_price: 50 },
+    { name: "Consumer unit upgrade", type: "service", unit: "each", unit_price: 450 },
+    { name: "Socket installation", type: "service", unit: "each", unit_price: 85 },
+    { name: "Emergency uplift", type: "uplift", unit: "percent", unit_price: 50 },
+  ],
+  plasterer: [
+    { name: "Day rate", type: "labour", unit: "day", unit_price: 200 },
+    { name: "Labour rate", type: "labour", unit: "hour", unit_price: 40 },
+    { name: "Room plastering (per sqm)", type: "service", unit: "metre", unit_price: 18 },
+    { name: "Ceiling skim", type: "service", unit: "each", unit_price: 280 },
+    { name: "Weekend uplift", type: "uplift", unit: "percent", unit_price: 25 },
+  ],
+  builder: [
+    { name: "Day rate (labourer)", type: "labour", unit: "day", unit_price: 150 },
+    { name: "Day rate (skilled)", type: "labour", unit: "day", unit_price: 220 },
+    { name: "Labour rate", type: "labour", unit: "hour", unit_price: 45 },
+    { name: "Skip hire", type: "material", unit: "each", unit_price: 250 },
+    { name: "Weekend uplift", type: "uplift", unit: "percent", unit_price: 25 },
+  ],
+};
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -36,9 +78,38 @@ export default function Onboarding() {
   const [phone, setPhone] = useState("");
   const [labourRate, setLabourRate] = useState("");
   const [vatRegistered, setVatRegistered] = useState(false);
+  const [priceItems, setPriceItems] = useState<DefaultPriceItem[]>([]);
 
   // Get default labour rate from brand config when trade is selected
   const selectedBrand = selectedTrade ? brands[selectedTrade] : null;
+
+  const handleTradeSelect = (trade: TradeType) => {
+    setSelectedTrade(trade);
+    setLabourRate(String(brands[trade].defaultLabourRate));
+    // Pre-populate price items with trade defaults
+    setPriceItems([...tradeDefaultItems[trade]]);
+  };
+
+  const updatePriceItem = (index: number, updates: Partial<DefaultPriceItem>) => {
+    setPriceItems(prev => {
+      const newItems = [...prev];
+      newItems[index] = { ...newItems[index], ...updates };
+      return newItems;
+    });
+  };
+
+  const removePriceItem = (index: number) => {
+    setPriceItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addPriceItem = () => {
+    setPriceItems(prev => [...prev, {
+      name: "",
+      type: "service" as PriceItemType,
+      unit: "each" as PriceItemUnit,
+      unit_price: 0,
+    }]);
+  };
 
   const handleComplete = async () => {
     if (!user || !selectedTrade || !businessName.trim()) {
@@ -53,7 +124,9 @@ export default function Onboarding() {
     setLoading(true);
     try {
       const defaultRate = selectedBrand?.defaultLabourRate || 45;
-      const { error } = await supabase.from("companies").insert({
+      
+      // Create company
+      const { data: newCompany, error: companyError } = await supabase.from("companies").insert({
         user_id: user.id,
         business_name: businessName.trim(),
         email: email.trim() || null,
@@ -61,9 +134,28 @@ export default function Onboarding() {
         trade: selectedTrade,
         default_labour_rate: parseFloat(labourRate) || defaultRate,
         vat_registered: vatRegistered,
-      });
+      }).select().single();
 
-      if (error) throw error;
+      if (companyError || !newCompany) throw companyError || new Error("Failed to create company");
+
+      // Create price library items
+      const validItems = priceItems.filter(item => item.name.trim() && item.unit_price > 0);
+      if (validItems.length > 0) {
+        const { error: itemsError } = await supabase.from("price_items").insert(
+          validItems.map((item, index) => ({
+            company_id: newCompany.id,
+            name: item.name.trim(),
+            type: item.type,
+            unit: item.unit,
+            unit_price: item.unit_price,
+            sort_order: index,
+          }))
+        );
+        if (itemsError) {
+          console.error("Error creating price items:", itemsError);
+          // Don't fail onboarding, just log the error
+        }
+      }
 
       await refetch();
       toast({
@@ -82,6 +174,17 @@ export default function Onboarding() {
     }
   };
 
+  const getUnitLabel = (unit: PriceItemUnit) => {
+    const labels: Record<PriceItemUnit, string> = {
+      each: "Fixed",
+      hour: "/hour",
+      percent: "%",
+      metre: "/sqm",
+      day: "/day",
+    };
+    return labels[unit];
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <div className="w-full max-w-lg animate-fade-in">
@@ -95,16 +198,16 @@ export default function Onboarding() {
             <ArrowLeft className="mr-2 w-4 h-4" /> Back to Home
           </Button>
           <h1 className="text-3xl font-bold text-foreground mb-2">Set Up Your Business</h1>
-          <p className="text-muted-foreground">Quick setup to get you quoting in under a minute</p>
+          <p className="text-muted-foreground">Quick setup — you'll be quoting in under 60 seconds</p>
         </div>
 
         {/* Progress indicator */}
         <div className="flex justify-center gap-2 mb-8">
-          {[1, 2].map((s) => (
+          {[1, 2, 3].map((s) => (
             <div
               key={s}
               className={cn(
-                "w-12 h-1.5 rounded-full transition-colors",
+                "w-10 h-1.5 rounded-full transition-colors",
                 s <= step ? "bg-primary" : "bg-border"
               )}
             />
@@ -125,11 +228,7 @@ export default function Onboarding() {
                   return (
                     <button
                       key={trade.id}
-                      onClick={() => {
-                        setSelectedTrade(trade.id);
-                        // Set default labour rate for this trade
-                        setLabourRate(String(brands[trade.id].defaultLabourRate));
-                      }}
+                      onClick={() => handleTradeSelect(trade.id)}
                       className={cn(
                         "p-4 rounded-lg border-2 text-left transition-all hover:shadow-md",
                         isSelected
@@ -238,8 +337,85 @@ export default function Onboarding() {
                 </Button>
                 <Button
                   className="flex-1"
+                  onClick={() => setStep(3)}
+                  disabled={!businessName.trim()}
+                >
+                  Continue <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 3 && (
+          <Card className="animate-slide-up">
+            <CardHeader>
+              <CardTitle>Set Your Defaults</CardTitle>
+              <CardDescription>Pre-fill your common prices — edit, delete, or add more</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {priceItems.map((item, index) => (
+                <div key={index} className="flex items-center gap-2 p-2 rounded-lg border border-border bg-muted/30">
+                  <div className="flex-1 min-w-0">
+                    <Input
+                      placeholder="Item name"
+                      value={item.name}
+                      onChange={(e) => updatePriceItem(index, { name: e.target.value })}
+                      className="border-0 bg-transparent px-0 h-8 text-sm font-medium"
+                    />
+                  </div>
+                  <div className="w-20">
+                    <Select
+                      value={item.unit}
+                      onValueChange={(v) => updatePriceItem(index, { unit: v as PriceItemUnit })}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="each">Fixed</SelectItem>
+                        <SelectItem value="hour">/hour</SelectItem>
+                        <SelectItem value="day">/day</SelectItem>
+                        <SelectItem value="metre">/sqm</SelectItem>
+                        <SelectItem value="percent">%</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-24 flex items-center gap-1">
+                    {item.unit !== "percent" && <span className="text-muted-foreground text-sm">£</span>}
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={item.unit_price}
+                      onChange={(e) => updatePriceItem(index, { unit_price: parseFloat(e.target.value) || 0 })}
+                      className="h-8 text-sm"
+                    />
+                    {item.unit === "percent" && <span className="text-muted-foreground text-sm">%</span>}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                    onClick={() => removePriceItem(index)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+              
+              <Button variant="outline" size="sm" onClick={addPriceItem} className="w-full">
+                <Plus className="w-4 h-4 mr-1" /> Add Item
+              </Button>
+
+              <div className="flex gap-3 pt-4">
+                <Button variant="outline" onClick={() => setStep(2)}>
+                  <ArrowLeft className="mr-2 w-4 h-4" /> Back
+                </Button>
+                <Button
+                  className="flex-1"
                   onClick={handleComplete}
-                  disabled={loading || !businessName.trim()}
+                  disabled={loading}
                 >
                   {loading ? (
                     <>
@@ -247,7 +423,10 @@ export default function Onboarding() {
                       Setting up...
                     </>
                   ) : (
-                    "Complete Setup"
+                    <>
+                      <Check className="mr-2 w-4 h-4" />
+                      Complete Setup
+                    </>
                   )}
                 </Button>
               </div>
