@@ -29,12 +29,7 @@ export default function Index() {
   const { brand, selectBrand } = useBrand();
   const navigate = useNavigate();
 
-  // Only auto-redirect users who have completed onboarding (have a company)
-  useEffect(() => {
-    if (!authLoading && !companyLoading && user && company) {
-      navigate("/dashboard");
-    }
-  }, [user, company, authLoading, companyLoading, navigate]);
+  // No auto-redirect - let users view the homepage even if logged in
 
   if (authLoading || companyLoading) {
     return (
