@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export type AdminRole = "super_admin" | "admin" | "support";
 
 export function useAdmin() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
   const [loading, setLoading] = useState(true);
@@ -14,6 +14,12 @@ export function useAdmin() {
   const canModify = adminRole === "super_admin" || adminRole === "admin";
 
   useEffect(() => {
+    // Don't do anything while auth is still loading
+    if (authLoading) {
+      setLoading(true);
+      return;
+    }
+
     if (!user) {
       setIsAdmin(false);
       setAdminRole(null);
@@ -22,6 +28,7 @@ export function useAdmin() {
     }
 
     const checkAdminStatus = async () => {
+      setLoading(true);
       try {
         const { data, error } = await supabase.rpc("is_admin", {
           _user_id: user.id,
@@ -51,7 +58,7 @@ export function useAdmin() {
     };
 
     checkAdminStatus();
-  }, [user]);
+  }, [user, authLoading]);
 
   return { isAdmin, adminRole, canModify, loading };
 }
