@@ -68,12 +68,16 @@ export function useAdminMetrics(dateFrom: Date, dateTo: Date) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Stabilize date values to prevent infinite loops
+  const dateFromStr = dateFrom.toISOString();
+  const dateToStr = dateTo.toISOString();
+
   const fetchMetrics = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.rpc("admin_get_metrics", {
-        p_date_from: dateFrom.toISOString(),
-        p_date_to: dateTo.toISOString(),
+        p_date_from: dateFromStr,
+        p_date_to: dateToStr,
       });
 
       if (error) throw error;
@@ -85,7 +89,7 @@ export function useAdminMetrics(dateFrom: Date, dateTo: Date) {
     } finally {
       setLoading(false);
     }
-  }, [dateFrom, dateTo]);
+  }, [dateFromStr, dateToStr]);
 
   useEffect(() => {
     fetchMetrics();
