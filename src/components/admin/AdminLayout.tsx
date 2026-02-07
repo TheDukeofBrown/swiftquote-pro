@@ -9,9 +9,13 @@ import {
   ClipboardList,
   Settings,
   LogOut,
+  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdmin } from "@/hooks/useAdmin";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -22,15 +26,31 @@ const navItems = [
   { href: "/admin/companies", label: "Companies", icon: Building2 },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/quotes", label: "Quotes", icon: FileText },
+  { href: "/admin/events", label: "Events", icon: Activity },
   { href: "/admin/audit", label: "Audit Log", icon: ClipboardList },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const location = useLocation();
+  const { adminRole } = useAdmin();
+  const { user } = useAuth();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = "/";
+  };
+
+  const getRoleBadgeVariant = (role: string | null) => {
+    switch (role) {
+      case "super_admin":
+        return "default";
+      case "admin":
+        return "secondary";
+      case "support":
+        return "outline";
+      default:
+        return "outline";
+    }
   };
 
   return (
@@ -42,6 +62,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <Settings className="w-6 h-6 text-primary" />
             <span className="font-bold text-lg">Admin Console</span>
           </Link>
+        </div>
+
+        {/* Admin info */}
+        <div className="p-4 border-b bg-muted/50">
+          <p className="text-sm text-muted-foreground truncate">{user?.email}</p>
+          <Badge variant={getRoleBadgeVariant(adminRole)} className="mt-1 capitalize">
+            {adminRole?.replace("_", " ") || "Admin"}
+          </Badge>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">

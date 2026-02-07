@@ -556,6 +556,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_can_modify: { Args: never; Returns: boolean }
       admin_get_audit_log: {
         Args: { p_limit?: number; p_offset?: number }
         Returns: {
@@ -590,6 +591,29 @@ export type Database = {
       admin_get_company_detail: {
         Args: { p_company_id: string }
         Returns: Json
+      }
+      admin_get_events: {
+        Args: {
+          p_company_id?: string
+          p_date_from?: string
+          p_date_to?: string
+          p_event_type?: string
+          p_limit?: number
+          p_offset?: number
+          p_quote_id?: string
+        }
+        Returns: {
+          company_id: string
+          company_name: string
+          created_at: string
+          error: string
+          event_source: string
+          event_type: string
+          id: string
+          payload: Json
+          quote_id: string
+          quote_reference: string
+        }[]
       }
       admin_get_metrics: {
         Args: { p_date_from: string; p_date_to: string }
@@ -629,6 +653,7 @@ export type Database = {
         Args: { p_company_id: string; p_reason: string }
         Returns: boolean
       }
+      admin_resend_quote: { Args: { p_quote_id: string }; Returns: Json }
       admin_set_company_note: {
         Args: { p_company_id: string; p_note: string }
         Returns: boolean

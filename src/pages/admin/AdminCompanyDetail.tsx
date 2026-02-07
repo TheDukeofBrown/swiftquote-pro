@@ -24,9 +24,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useAdminActions } from "@/hooks/useAdmin";
+import { useAdminActions, useAdmin } from "@/hooks/useAdmin";
 import { toast } from "sonner";
 import { Loader2, Lock, Unlock, ArrowLeft, Building2, FileText, Mail, AlertTriangle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 
 interface CompanyDetail {
@@ -86,6 +87,7 @@ export default function AdminCompanyDetail() {
   const [saving, setSaving] = useState(false);
   const [lockDialogOpen, setLockDialogOpen] = useState(false);
 
+  const { canModify, adminRole } = useAdmin();
   const { getCompanyDetail, lockCompany, unlockCompany, setCompanyNote } = useAdminActions();
 
   useEffect(() => {
@@ -210,53 +212,77 @@ export default function AdminCompanyDetail() {
           </div>
 
           <div className="flex gap-2">
-            {isLocked ? (
-              <Button onClick={handleUnlock} disabled={saving}>
-                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Unlock className="w-4 h-4 mr-2" />}
-                Unlock Account
-              </Button>
-            ) : (
-              <Dialog open={lockDialogOpen} onOpenChange={setLockDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="destructive">
-                    <Lock className="w-4 h-4 mr-2" />
-                    Lock Account
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Lock Company Account</DialogTitle>
-                    <DialogDescription>
-                      Locking this account will prevent them from creating or sending quotes.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="lockReason">Lock Reason</Label>
-                      <Input
-                        id="lockReason"
-                        placeholder="e.g., Payment overdue, Terms violation..."
-                        value={lockReason}
-                        onChange={(e) => setLockReason(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setLockDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      onClick={handleLock}
-                      disabled={!lockReason.trim() || saving}
-                    >
-                      {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                      Lock Account
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            )}
+            <TooltipProvider>
+              {isLocked ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button onClick={handleUnlock} disabled={saving || !canModify}>
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Unlock className="w-4 h-4 mr-2" />}
+                        Unlock Account
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {!canModify && (
+                    <TooltipContent>
+                      <p>Support role cannot unlock accounts</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              ) : (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Dialog open={lockDialogOpen} onOpenChange={setLockDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="destructive" disabled={!canModify}>
+                            <Lock className="w-4 h-4 mr-2" />
+                            Lock Account
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Lock Company Account</DialogTitle>
+                            <DialogDescription>
+                              Locking this account will prevent them from creating or sending quotes.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="lockReason">Lock Reason</Label>
+                              <Input
+                                id="lockReason"
+                                placeholder="e.g., Payment overdue, Terms violation..."
+                                value={lockReason}
+                                onChange={(e) => setLockReason(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={() => setLockDialogOpen(false)}>
+                              Cancel
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={handleLock}
+                              disabled={!lockReason.trim() || saving}
+                            >
+                              {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                              Lock Account
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </span>
+                  </TooltipTrigger>
+                  {!canModify && (
+                    <TooltipContent>
+                      <p>Support role cannot lock accounts</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              )}
+            </TooltipProvider>
           </div>
         </div>
 
@@ -347,11 +373,17 @@ export default function AdminCompanyDetail() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={4}
+                disabled={!canModify}
               />
-              <Button onClick={handleSaveNotes} disabled={saving} className="w-full">
+              <Button onClick={handleSaveNotes} disabled={saving || !canModify} className="w-full">
                 {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                 Save Notes
               </Button>
+              {!canModify && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Support role cannot edit notes
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
