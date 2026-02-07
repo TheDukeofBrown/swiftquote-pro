@@ -30,9 +30,11 @@ interface Quote {
   created_at: string;
   valid_until: string | null;
   status: string;
+  company_id: string;
 }
 
 interface Company {
+  id: string;
   business_name: string;
   email: string | null;
   phone: string | null;
@@ -62,6 +64,67 @@ const tradeNames: Record<string, string> = {
   roofer: "RoofQuote",
 };
 
+// Event logging helpers
+async function logQuoteEvent(
+  supabase: ReturnType<typeof createClient>,
+  companyId: string,
+  quoteId: string,
+  eventType: string,
+  payload: Record<string, unknown> = {}
+) {
+  try {
+    await supabase
+      .from("quote_events")
+      .insert({
+        company_id: companyId,
+        quote_id: quoteId,
+        event_type: eventType,
+        payload,
+      });
+    console.log(`Logged quote event: ${eventType}`);
+  } catch (err) {
+    console.error("Failed to log quote event:", err);
+  }
+}
+
+async function logEmailEvent(
+  supabase: ReturnType<typeof createClient>,
+  companyId: string,
+  quoteId: string,
+  toEmail: string,
+  subject: string,
+  status: "sent" | "failed",
+  error?: string,
+  providerMessageId?: string
+) {
+  try {
+    await supabase
+      .from("email_events")
+      .insert({
+        company_id: companyId,
+        quote_id: quoteId,
+        provider: "resend",
+        to_email: toEmail,
+        subject,
+        status,
+        error: error || null,
+        provider_message_id: providerMessageId || null,
+      });
+    console.log(`Logged email event: ${status}`);
+  } catch (err) {
+    console.error("Failed to log email event:", err);
+  }
+}
+
+async function isCompanyLocked(supabase: ReturnType<typeof createClient>, companyId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("company_flags")
+    .select("is_locked")
+    .eq("company_id", companyId)
+    .maybeSingle();
+  return data?.is_locked === true;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -81,6 +144,12 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Service role client for logging events
+    const serviceClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
     // Verify user
@@ -133,6 +202,17 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Check if company is locked
+    if (await isCompanyLocked(serviceClient, company.id)) {
+      return new Response(JSON.stringify({ 
+        error: "Account locked – contact support",
+        code: "COMPANY_LOCKED"
+      }), { 
+        status: 403, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
     // Validate quote can be sent
     if (!quote.customer_email && !testMode) {
       return new Response(JSON.stringify({ 
@@ -175,9 +255,31 @@ Deno.serve(async (req) => {
 
     // Generate PDF
     console.log("Generating PDF...");
-    const pdfDoc = generateQuotePDF(quote, company, items || [], logoBase64);
-    const pdfBase64 = pdfDoc.output("datauristring").split(",")[1];
-    console.log("PDF generated successfully");
+    let pdfBase64: string;
+    try {
+      const pdfDoc = generateQuotePDF(quote, company, items || [], logoBase64);
+      pdfBase64 = pdfDoc.output("datauristring").split(",")[1];
+      console.log("PDF generated successfully");
+      
+      // Log PDF generated event
+      await logQuoteEvent(serviceClient, company.id, quoteId, "pdf_generated", {
+        items_count: items?.length || 0,
+        total: quote.total,
+      });
+    } catch (pdfError) {
+      console.error("PDF generation error:", pdfError);
+      await logQuoteEvent(serviceClient, company.id, quoteId, "pdf_generated", {
+        error: pdfError instanceof Error ? pdfError.message : "Unknown error",
+        success: false,
+      });
+      return new Response(JSON.stringify({ 
+        error: "Failed to generate PDF",
+        code: "PDF_FAILED"
+      }), { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
 
     // Determine recipient email
     const recipientEmail = testMode ? company.email : quote.customer_email;
@@ -196,13 +298,14 @@ Deno.serve(async (req) => {
     const baseUrl = Deno.env.get("FRONTEND_URL") || "https://workquote.app";
     const customerViewUrl = `${baseUrl}/q/${quoteId}`;
     const brandName = tradeNames[company.trade] || "WorkQuote";
+    const emailSubject = `Quote ${quote.reference} from ${company.business_name}`;
 
     // Send email
     console.log(`Sending email to ${recipientEmail}...`);
     const emailResult = await resend.emails.send({
       from: `${company.business_name} <quotes@workquote.app>`,
       to: [recipientEmail],
-      subject: `Quote ${quote.reference} from ${company.business_name}`,
+      subject: emailSubject,
       html: generateEmailHTML(quote, company, brandName, customerViewUrl, testMode),
       attachments: [
         {
@@ -214,6 +317,24 @@ Deno.serve(async (req) => {
 
     if (emailResult.error) {
       console.error("Email send error:", emailResult.error);
+      
+      // Log failed email event
+      await logEmailEvent(
+        serviceClient,
+        company.id,
+        quoteId,
+        recipientEmail,
+        emailSubject,
+        "failed",
+        emailResult.error.message
+      );
+      
+      // Log failed quote event
+      await logQuoteEvent(serviceClient, company.id, quoteId, "email_failed", {
+        to_email: recipientEmail,
+        error: emailResult.error.message,
+      });
+      
       return new Response(JSON.stringify({ 
         error: "Failed to send email",
         details: emailResult.error.message,
@@ -225,6 +346,25 @@ Deno.serve(async (req) => {
     }
 
     console.log("Email sent successfully:", emailResult.data?.id);
+
+    // Log successful email event
+    await logEmailEvent(
+      serviceClient,
+      company.id,
+      quoteId,
+      recipientEmail,
+      emailSubject,
+      "sent",
+      undefined,
+      emailResult.data?.id
+    );
+    
+    // Log email sent quote event
+    await logQuoteEvent(serviceClient, company.id, quoteId, "email_sent", {
+      to_email: recipientEmail,
+      provider_message_id: emailResult.data?.id,
+      test_mode: testMode || false,
+    });
 
     // Update quote status to "sent" ONLY after email succeeds
     const { error: updateError } = await supabase
@@ -238,6 +378,12 @@ Deno.serve(async (req) => {
     if (updateError) {
       console.error("Quote status update error:", updateError);
       // Email was sent but status update failed - log but don't fail
+    } else {
+      // Log status change event
+      await logQuoteEvent(serviceClient, company.id, quoteId, "status_changed", {
+        from: quote.status,
+        to: "sent",
+      });
     }
 
     // Increment usage
