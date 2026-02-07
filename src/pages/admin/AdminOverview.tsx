@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAdminMetrics, useAdminQuotes } from "@/hooks/useAdmin";
@@ -15,20 +15,18 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 
 export default function AdminOverview() {
-  const now = new Date();
-  const sevenDaysAgo = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 7);
-    return d;
-  }, []);
-  const thirtyDaysAgo = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    return d;
-  }, []);
+  // Use stable date references to prevent infinite re-renders
+  const [dateRanges] = useState(() => {
+    const now = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return { now, sevenDaysAgo, thirtyDaysAgo };
+  });
 
-  const { metrics: metrics7d, loading: loading7d } = useAdminMetrics(sevenDaysAgo, now);
-  const { metrics: metrics30d, loading: loading30d } = useAdminMetrics(thirtyDaysAgo, now);
+  const { metrics: metrics7d, loading: loading7d } = useAdminMetrics(dateRanges.sevenDaysAgo, dateRanges.now);
+  const { metrics: metrics30d, loading: loading30d } = useAdminMetrics(dateRanges.thirtyDaysAgo, dateRanges.now);
   const { quotes, loading: quotesLoading } = useAdminQuotes();
 
   const recentAccepted = useMemo(() => {
@@ -38,10 +36,8 @@ export default function AdminOverview() {
       .slice(0, 10);
   }, [quotes]);
 
-  const recentFailures = useMemo(() => {
-    // This would come from email_events, for now show quotes with issues
-    return [];
-  }, []);
+  // Placeholder for future email failure tracking
+  const recentFailures: unknown[] = [];
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(amount);
