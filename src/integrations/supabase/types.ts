@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_user_id: string
+          after: Json | null
+          before: Json | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          action: string
+          admin_user_id: string
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string
+          after?: Json | null
+          before?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      admin_users: {
+        Row: {
+          created_at: string
+          role: Database["public"]["Enums"]["admin_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          role?: Database["public"]["Enums"]["admin_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          role?: Database["public"]["Enums"]["admin_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           address: string | null
@@ -62,6 +116,38 @@ export type Database = {
         }
         Relationships: []
       }
+      company_flags: {
+        Row: {
+          company_id: string
+          is_locked: boolean
+          lock_reason: string | null
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          is_locked?: boolean
+          lock_reason?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          is_locked?: boolean
+          lock_reason?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_flags_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
@@ -96,6 +182,60 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_events: {
+        Row: {
+          company_id: string
+          created_at: string
+          error: string | null
+          id: string
+          provider: string
+          provider_message_id: string | null
+          quote_id: string | null
+          status: string
+          subject: string
+          to_email: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider?: string
+          provider_message_id?: string | null
+          quote_id?: string | null
+          status: string
+          subject: string
+          to_email: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          provider?: string
+          provider_message_id?: string | null
+          quote_id?: string | null
+          status?: string
+          subject?: string
+          to_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_events_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -143,6 +283,48 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_events: {
+        Row: {
+          company_id: string
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json | null
+          quote_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json | null
+          quote_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          quote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_events_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -374,12 +556,98 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_audit_log: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          action: string
+          admin_email: string
+          admin_user_id: string
+          after: Json
+          before: Json
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+        }[]
+      }
+      admin_get_companies: {
+        Args: never
+        Returns: {
+          business_name: string
+          created_at: string
+          email: string
+          email_failure_rate: number
+          id: string
+          is_locked: boolean
+          lock_reason: string
+          notes: string
+          phone: string
+          quotes_accepted_30d: number
+          quotes_sent_30d: number
+          trade: string
+        }[]
+      }
+      admin_get_company_detail: {
+        Args: { p_company_id: string }
+        Returns: Json
+      }
+      admin_get_metrics: {
+        Args: { p_date_from: string; p_date_to: string }
+        Returns: Json
+      }
+      admin_get_quotes: {
+        Args: never
+        Returns: {
+          accepted_at: string
+          company_id: string
+          company_name: string
+          created_at: string
+          customer_email: string
+          customer_name: string
+          declined_at: string
+          id: string
+          reference: string
+          sent_at: string
+          status: string
+          total: number
+          viewed_at: string
+        }[]
+      }
+      admin_get_users: {
+        Args: never
+        Returns: {
+          company_id: string
+          company_name: string
+          created_at: string
+          email: string
+          is_admin: boolean
+          trade: string
+          user_id: string
+        }[]
+      }
+      admin_lock_company: {
+        Args: { p_company_id: string; p_reason: string }
+        Returns: boolean
+      }
+      admin_set_company_note: {
+        Args: { p_company_id: string; p_note: string }
+        Returns: boolean
+      }
+      admin_unlock_company: { Args: { p_company_id: string }; Returns: boolean }
+      can_modify_quotes: { Args: { _company_id: string }; Returns: boolean }
+      get_admin_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["admin_role"]
+      }
       increment_usage: {
         Args: { p_company_id: string; p_metric: string }
         Returns: boolean
       }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_company_locked: { Args: { _company_id: string }; Returns: boolean }
     }
     Enums: {
+      admin_role: "super_admin" | "admin" | "support"
       price_item_type: "labour" | "material" | "service" | "uplift"
       price_item_unit: "each" | "hour" | "percent" | "metre" | "day"
       quote_status: "draft" | "sent" | "viewed" | "accepted" | "declined"
@@ -524,6 +792,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      admin_role: ["super_admin", "admin", "support"],
       price_item_type: ["labour", "material", "service", "uplift"],
       price_item_unit: ["each", "hour", "percent", "metre", "day"],
       quote_status: ["draft", "sent", "viewed", "accepted", "declined"],

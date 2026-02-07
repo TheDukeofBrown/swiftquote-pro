@@ -8,6 +8,7 @@ import { CompanyProvider } from "@/contexts/CompanyContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminProtectedRoute from "@/components/AdminProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -22,6 +23,15 @@ import QuoteView from "./pages/QuoteView";
 import PlumbersLanding from "./pages/PlumbersLanding";
 import ElectriciansLanding from "./pages/ElectriciansLanding";
 import NotFound from "./pages/NotFound";
+
+// Admin pages
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminCompanies from "./pages/admin/AdminCompanies";
+import AdminCompanyDetail from "./pages/admin/AdminCompanyDetail";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminQuotes from "./pages/admin/AdminQuotes";
+import AdminQuoteDetail from "./pages/admin/AdminQuoteDetail";
+import AdminAudit from "./pages/admin/AdminAudit";
 
 const queryClient = new QueryClient();
 
@@ -114,6 +124,65 @@ const App = () => (
                   />
                   {/* Public quote view - no auth required */}
                   <Route path="/q/:quoteId" element={<QuoteView />} />
+                  
+                  {/* Admin routes */}
+                  <Route
+                    path="/admin"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminOverview />
+                      </AdminProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/companies"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminCompanies />
+                      </AdminProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/companies/:id"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminCompanyDetail />
+                      </AdminProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/users"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminUsers />
+                      </AdminProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/quotes"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminQuotes />
+                      </AdminProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/quotes/:id"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminQuoteDetail />
+                      </AdminProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/audit"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminAudit />
+                      </AdminProtectedRoute>
+                    }
+                  />
+                  
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </SubscriptionProvider>

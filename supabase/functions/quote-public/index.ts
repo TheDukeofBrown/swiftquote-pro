@@ -13,6 +13,28 @@ interface QuoteItem {
   line_total: number;
 }
 
+async function logQuoteEvent(
+  supabase: ReturnType<typeof createClient>,
+  companyId: string,
+  quoteId: string,
+  eventType: string,
+  payload: Record<string, unknown> = {}
+) {
+  try {
+    await supabase
+      .from("quote_events")
+      .insert({
+        company_id: companyId,
+        quote_id: quoteId,
+        event_type: eventType,
+        payload,
+      });
+    console.log(`Logged quote event: ${eventType} for quote ${quoteId}`);
+  } catch (err) {
+    console.error("Failed to log quote event:", err);
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -99,6 +121,12 @@ Deno.serve(async (req) => {
           })
           .eq("id", quoteId);
         
+        // Log viewed event
+        await logQuoteEvent(supabase, quote.company_id, quoteId, "viewed", {
+          viewed_at: new Date().toISOString(),
+          previous_status: quote.status,
+        });
+        
         console.log(`Quote ${quote.reference} marked as viewed`);
       }
 
@@ -138,7 +166,7 @@ Deno.serve(async (req) => {
       // Fetch current quote status
       const { data: quote, error: fetchError } = await supabase
         .from("quotes")
-        .select("status, accepted_at, declined_at")
+        .select("status, accepted_at, declined_at, company_id")
         .eq("id", quoteId)
         .maybeSingle();
 
@@ -177,6 +205,13 @@ Deno.serve(async (req) => {
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+
+      // Log event
+      const eventType = action === "accept" ? "accepted" : "declined";
+      await logQuoteEvent(supabase, quote.company_id, quoteId, eventType, {
+        previous_status: quote.status,
+        timestamp: new Date().toISOString(),
+      });
 
       console.log(`Quote ${quoteId} ${action}ed`);
 
