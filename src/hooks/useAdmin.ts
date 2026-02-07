@@ -2,11 +2,16 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+export type AdminRole = "super_admin" | "admin" | "support";
+
 export function useAdmin() {
   const { user } = useAuth();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminRole, setAdminRole] = useState<string | null>(null);
+  const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Derived permission: can perform write actions (lock/unlock, resend, etc.)
+  const canModify = adminRole === "super_admin" || adminRole === "admin";
 
   useEffect(() => {
     if (!user) {
@@ -33,7 +38,7 @@ export function useAdmin() {
             const { data: roleData } = await supabase.rpc("get_admin_role", {
               _user_id: user.id,
             });
-            setAdminRole(roleData);
+            setAdminRole(roleData as AdminRole);
           }
         }
       } catch (err) {
@@ -48,7 +53,7 @@ export function useAdmin() {
     checkAdminStatus();
   }, [user]);
 
-  return { isAdmin, adminRole, loading };
+  return { isAdmin, adminRole, canModify, loading };
 }
 
 export function useAdminMetrics(dateFrom: Date, dateTo: Date) {
@@ -193,6 +198,51 @@ export function useAdminAuditLog(limit = 100, offset = 0) {
   return { logs, loading, error, refetch: fetchLogs };
 }
 
+interface EventFilters {
+  companyId?: string;
+  quoteId?: string;
+  eventType?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+  limit?: number;
+  offset?: number;
+}
+
+export function useAdminEvents(filters: EventFilters = {}) {
+  const [events, setEvents] = useState<unknown[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchEvents = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc("admin_get_events", {
+        p_company_id: filters.companyId || null,
+        p_quote_id: filters.quoteId || null,
+        p_event_type: filters.eventType || null,
+        p_date_from: filters.dateFrom?.toISOString() || null,
+        p_date_to: filters.dateTo?.toISOString() || null,
+        p_limit: filters.limit || 100,
+        p_offset: filters.offset || 0,
+      });
+      if (error) throw error;
+      setEvents(data || []);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to fetch events:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch events");
+    } finally {
+      setLoading(false);
+    }
+  }, [filters.companyId, filters.quoteId, filters.eventType, filters.dateFrom, filters.dateTo, filters.limit, filters.offset]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
+  return { events, loading, error, refetch: fetchEvents };
+}
+
 export function useAdminActions() {
   const lockCompany = async (companyId: string, reason: string) => {
     const { error } = await supabase.rpc("admin_lock_company", {
@@ -228,5 +278,28 @@ export function useAdminActions() {
     return data;
   };
 
-  return { lockCompany, unlockCompany, setCompanyNote, getCompanyDetail };
+  const resendQuote = async (quoteId: string) => {
+    // First validate with RPC
+    const { data, error } = await supabase.rpc("admin_resend_quote", {
+      p_quote_id: quoteId,
+    });
+    if (error) throw error;
+    
+    // Then trigger the edge function
+    const { data: session } = await supabase.auth.getSession();
+    const response = await supabase.functions.invoke("send-quote", {
+      body: { quoteId },
+      headers: {
+        Authorization: `Bearer ${session.session?.access_token}`,
+      },
+    });
+
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
+
+    return data;
+  };
+
+  return { lockCompany, unlockCompany, setCompanyNote, getCompanyDetail, resendQuote };
 }

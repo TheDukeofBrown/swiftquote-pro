@@ -31,6 +31,7 @@ import AdminCompanyDetail from "./pages/admin/AdminCompanyDetail";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminQuotes from "./pages/admin/AdminQuotes";
 import AdminQuoteDetail from "./pages/admin/AdminQuoteDetail";
+import AdminEvents from "./pages/admin/AdminEvents";
 import AdminAudit from "./pages/admin/AdminAudit";
 
 const queryClient = new QueryClient();
@@ -171,6 +172,14 @@ const App = () => (
                     element={
                       <AdminProtectedRoute>
                         <AdminQuoteDetail />
+                      </AdminProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/events"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminEvents />
                       </AdminProtectedRoute>
                     }
                   />

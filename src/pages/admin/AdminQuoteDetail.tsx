@@ -12,10 +12,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { supabase } from "@/integrations/supabase/client";
+import { useAdmin, useAdminActions } from "@/hooks/useAdmin";
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, Send, FileText, Mail } from "lucide-react";
 import { format } from "date-fns";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { supabase } from "@/integrations/supabase/client";
 
 interface QuoteDetail {
   id: string;
@@ -67,6 +69,9 @@ export default function AdminQuoteDetail() {
   const [emailEvents, setEmailEvents] = useState<EmailEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [resending, setResending] = useState(false);
+
+  const { canModify } = useAdmin();
+  const { resendQuote } = useAdminActions();
 
   useEffect(() => {
     if (!id) return;
@@ -121,22 +126,10 @@ export default function AdminQuoteDetail() {
   }, [id]);
 
   const handleResendQuote = async () => {
-    if (!id) return;
+    if (!id || !canModify) return;
     setResending(true);
     try {
-      const { data: session } = await supabase.auth.getSession();
-      
-      const response = await supabase.functions.invoke("send-quote", {
-        body: { quoteId: id },
-        headers: {
-          Authorization: `Bearer ${session.session?.access_token}`,
-        },
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
+      await resendQuote(id);
       toast.success("Quote resent successfully");
       
       // Refresh events
@@ -227,14 +220,30 @@ export default function AdminQuoteDetail() {
             </div>
           </div>
 
-          <Button onClick={handleResendQuote} disabled={resending || !quote.customer_email}>
-            {resending ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Send className="w-4 h-4 mr-2" />
-            )}
-            Resend Quote
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button 
+                    onClick={handleResendQuote} 
+                    disabled={resending || !quote.customer_email || !canModify}
+                  >
+                    {resending ? (
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <Send className="w-4 h-4 mr-2" />
+                    )}
+                    Resend Quote
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {!canModify && (
+                <TooltipContent>
+                  <p>Support role cannot resend quotes</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
