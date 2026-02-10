@@ -1,50 +1,66 @@
-import { Building2, ArrowUpRight } from "lucide-react";
+import { Building2, ArrowUpRight, Layers, Settings, Shield, Workflow } from "lucide-react";
 
-const portfolio = {
-  "Trade Operations": [
-    {
-      name: "PayReady",
-      description: "Plot-based Payment Packs that support accurate valuation and payment.",
-      link: "https://payready.co.uk",
-    },
-    {
-      name: "WorkQuote",
-      description: "Professional quotes for trades, created and sent in under 60 seconds.",
-      link: "https://workquote.co.uk",
-    },
-  ],
-  "Compliance & Inspection": [
-    {
-      name: "FireDoor Inspection Pro™",
-      description: "Digital fire-door inspections with structured reporting and compliance records.",
-      status: "Launching on Lovable",
-    },
-  ],
-  "Professional & Hiring Tools": [
-    {
-      name: "ApplyReady",
-      description: "Recruiter-grade CV analysis and job search operating system.",
-      link: "https://applyready.co.uk",
-    },
-  ],
-};
+// Hero mobile mockups
+import mockupWorkquote from "@/assets/mockup-workquote.png";
+import mockupPayready from "@/assets/mockup-payready.png";
+import mockupFiredoor from "@/assets/mockup-firedoor.png";
+import mockupApplyready from "@/assets/mockup-applyready.png";
 
-const lanes = [
+// Desktop system screenshots
+import systemWorkquote from "@/assets/system-workquote.png";
+import systemPayready from "@/assets/system-payready.png";
+import systemFiredoor from "@/assets/system-firedoor.png";
+import systemApplyready from "@/assets/system-applyready.png";
+
+const systems = [
   {
-    title: "Trade Operations",
-    description:
-      "Software that helps trades price work accurately, evidence delivery, and get paid without friction.",
+    name: "WorkQuote",
+    label: "Quoting & pricing systems",
+    image: systemWorkquote,
+    link: "https://workquote.co.uk",
   },
   {
-    title: "Compliance & Inspection",
-    description:
-      "Digital tools that support regulated inspection workflows and defensible compliance records.",
+    name: "PayReady",
+    label: "Payment & valuation workflows",
+    image: systemPayready,
+    link: "https://payready.co.uk",
   },
   {
-    title: "Professional & Hiring Tools",
-    description:
-      "Platforms that help professionals present themselves clearly and progress with confidence.",
+    name: "FireDoor Inspection Pro™",
+    label: "Compliance & inspection platforms",
+    image: systemFiredoor,
   },
+  {
+    name: "ApplyReady",
+    label: "Professional & hiring tools",
+    image: systemApplyready,
+    link: "https://applyready.co.uk",
+  },
+];
+
+const capabilities = [
+  {
+    icon: Layers,
+    title: "Build and operate software platforms",
+    description: "End-to-end ownership — from architecture to daily operations.",
+  },
+  {
+    icon: Workflow,
+    title: "Automate admin-heavy operations",
+    description: "Replacing manual processes with structured, digital workflows.",
+  },
+  {
+    icon: Settings,
+    title: "Integrate systems and workflows",
+    description: "Connecting pricing, payments, compliance, and reporting.",
+  },
+];
+
+const strengths = [
+  "Built for real workflows",
+  "Mobile-first and field-tested",
+  "Designed to integrate",
+  "Operated long-term",
 ];
 
 const footerLinks = [
@@ -57,9 +73,9 @@ const footerLinks = [
 
 export default function Index() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-card text-foreground">
       {/* NAV */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
+      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur border-b border-border">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
@@ -79,107 +95,88 @@ export default function Index() {
       </header>
 
       {/* HERO */}
-      <section className="relative bg-hero-gradient text-primary-foreground overflow-hidden">
-        {/* Decorative shapes */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/[0.03]" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full bg-white/[0.02]" />
-          <div className="absolute top-1/2 right-1/4 w-40 h-40 rounded-full bg-white/[0.02]" />
+      <section className="relative bg-hero-gradient overflow-hidden">
+        {/* Decorative */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-white/[0.02]" />
+          <div className="absolute bottom-0 left-10 w-72 h-72 rounded-full bg-white/[0.015]" />
         </div>
 
-        <div className="relative max-w-5xl mx-auto px-6 py-28 md:py-40">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 max-w-3xl">
-            BuildStax Group
-          </h1>
-          <p className="text-lg md:text-xl text-white/80 leading-relaxed mb-8 max-w-2xl">
-            We build and operate focused software platforms for trades, compliance, and professional workflows.
-          </p>
-          <p className="text-sm text-white/50 italic tracking-wide">
-            Simple in the field. Useful in the office. Defensible when it matters.
-          </p>
-        </div>
-      </section>
+        <div className="relative max-w-6xl mx-auto px-6 py-20 md:py-28 lg:py-36">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+            {/* Left */}
+            <div>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white mb-6 leading-[1.1]">
+                Software platforms for&nbsp;the&nbsp;real&nbsp;world.
+              </h1>
+              <p className="text-base md:text-lg text-white/75 leading-relaxed mb-6 max-w-lg">
+                We design and build operational software for trades, compliance, and commercial teams.
+              </p>
+              <p className="text-sm text-white/40 tracking-wide font-medium">
+                Quoting · Payments · Inspections · Compliance · Automation
+              </p>
+            </div>
 
-      {/* WHAT WE BUILD */}
-      <section className="py-24 md:py-32 px-6">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
-            What we build
-          </h2>
-          <p className="text-muted-foreground mb-14 max-w-xl">
-            Three operating lanes, each with its own focus and direction.
-          </p>
-          <div className="grid md:grid-cols-3 gap-6">
-            {lanes.map((lane) => (
-              <div
-                key={lane.title}
-                className="bg-card border border-border rounded-xl p-7 hover:shadow-md transition-shadow"
-              >
-                <h3 className="font-semibold text-base mb-3 text-foreground">{lane.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {lane.description}
-                </p>
-              </div>
-            ))}
+            {/* Right — phone montage */}
+            <div className="relative h-[340px] md:h-[420px] lg:h-[480px] flex items-center justify-center">
+              {[
+                { src: mockupWorkquote, alt: "WorkQuote", style: "left-[0%] top-[8%] rotate-[-4deg] z-10" },
+                { src: mockupPayready, alt: "PayReady", style: "left-[20%] top-[0%] rotate-[1deg] z-20" },
+                { src: mockupFiredoor, alt: "FireDoor Inspection Pro", style: "left-[42%] top-[6%] rotate-[4deg] z-30" },
+                { src: mockupApplyready, alt: "ApplyReady", style: "left-[62%] top-[2%] rotate-[-2deg] z-40" },
+              ].map((phone) => (
+                <img
+                  key={phone.alt}
+                  src={phone.src}
+                  alt={phone.alt}
+                  className={`absolute w-[140px] md:w-[160px] lg:w-[180px] rounded-2xl shadow-2xl shadow-black/40 border border-white/10 ${phone.style}`}
+                  loading="eager"
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* PORTFOLIO */}
-      <section className="py-24 md:py-32 px-6 bg-muted/30">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
-            Portfolio
+      {/* SYSTEMS WE BUILD */}
+      <section className="py-20 md:py-28 px-6 bg-muted/40">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
+            Systems we build and operate
           </h2>
-          <p className="text-muted-foreground mb-14 max-w-xl">
-            Independent software businesses, each serving a defined market.
+          <p className="text-muted-foreground mb-12 max-w-xl">
+            Each platform serves a defined market with purpose-built software.
           </p>
-          <div className="space-y-12">
-            {Object.entries(portfolio).map(([lane, products]) => (
-              <div key={lane}>
-                <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-5">
-                  {lane}
-                </h3>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {products.map((product) => (
-                    <div
-                      key={product.name}
-                      className="bg-card border border-border rounded-xl p-6 flex flex-col justify-between hover:shadow-md transition-shadow"
+          <div className="grid md:grid-cols-2 gap-6">
+            {systems.map((system) => (
+              <div
+                key={system.name}
+                className="bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg transition-shadow group"
+              >
+                <div className="aspect-[16/10] bg-muted/60 overflow-hidden">
+                  <img
+                    src={system.image}
+                    alt={`${system.name} platform`}
+                    className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-5 flex items-start justify-between">
+                  <div>
+                    <h3 className="font-semibold text-base text-foreground mb-1">{system.name}</h3>
+                    <p className="text-sm text-muted-foreground">{system.label}</p>
+                  </div>
+                  {"link" in system && system.link && (
+                    <a
+                      href={system.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-foreground transition-colors shrink-0 mt-0.5"
+                      aria-label={`Visit ${system.name}`}
                     >
-                      <div>
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-semibold text-lg text-foreground">
-                            {product.name}
-                          </h4>
-                          {"link" in product && product.link && (
-                            <a
-                              href={product.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-muted-foreground hover:text-foreground transition-colors shrink-0 ml-3 mt-0.5"
-                              aria-label={`Visit ${product.name}`}
-                            >
-                              <ArrowUpRight className="w-4 h-4" />
-                            </a>
-                          )}
-                        </div>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {product.description}
-                        </p>
-                      </div>
-                      <div className="mt-4">
-                        {"link" in product && product.link ? (
-                          <span className="text-xs text-muted-foreground/60">
-                            {product.link.replace("https://", "")}
-                          </span>
-                        ) : "status" in product && product.status ? (
-                          <span className="inline-flex items-center text-xs font-medium text-muted-foreground/60 bg-muted rounded-full px-2.5 py-0.5">
-                            {product.status}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
-                  ))}
+                      <ArrowUpRight className="w-4 h-4" />
+                    </a>
+                  )}
                 </div>
               </div>
             ))}
@@ -187,21 +184,67 @@ export default function Index() {
         </div>
       </section>
 
-      {/* HOW WE OPERATE */}
-      <section className="py-24 md:py-32 px-6">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-8">
-            How we operate
+      {/* WHAT BUILDSTAX DOES */}
+      <section className="py-20 md:py-28 px-6">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
+            What BuildStax does
           </h2>
-          <p className="text-base text-muted-foreground leading-relaxed">
-            We build companies to stand on their own. Each product has its own identity, audience, and direction. What connects them is a shared approach: clarity over complexity, practicality over theory, and software that holds up when it matters commercially.
+          <p className="text-muted-foreground mb-12 max-w-xl">
+            Capability, not services.
+          </p>
+          <div className="grid md:grid-cols-3 gap-6">
+            {capabilities.map((cap) => (
+              <div
+                key={cap.title}
+                className="bg-card border border-border rounded-xl p-7"
+              >
+                <div className="w-11 h-11 rounded-lg bg-primary/10 flex items-center justify-center mb-5">
+                  <cap.icon className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-base text-foreground mb-2">{cap.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{cap.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* WHY BUILDSTAX */}
+      <section className="py-20 md:py-28 px-6 bg-muted/40">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-10">
+            Why BuildStax
+          </h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {strengths.map((s) => (
+              <div
+                key={s}
+                className="bg-card border border-border rounded-xl px-6 py-5 flex items-center"
+              >
+                <Shield className="w-4 h-4 text-primary shrink-0 mr-3" />
+                <span className="text-sm font-medium text-foreground">{s}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* THE GROUP */}
+      <section className="py-20 md:py-28 px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">
+            The BuildStax Group
+          </h2>
+          <p className="text-base text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+            BuildStax Group operates multiple independent software platforms serving trade, compliance, and professional markets.
           </p>
         </div>
       </section>
 
       {/* FOOTER */}
       <footer className="bg-hero-gradient text-white/90">
-        <div className="max-w-5xl mx-auto px-6 py-16">
+        <div className="max-w-6xl mx-auto px-6 py-16">
           <div className="flex items-center gap-2.5 mb-8">
             <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
               <Building2 className="w-4 h-4 text-white/80" />
@@ -211,7 +254,7 @@ export default function Index() {
             </span>
           </div>
           <p className="text-sm text-white/50 mb-8">
-            Owner and operator of independent software businesses.
+            Designing, building, and operating software that works.
           </p>
           <div className="flex flex-wrap gap-x-6 gap-y-2">
             {footerLinks.map((link) => (
