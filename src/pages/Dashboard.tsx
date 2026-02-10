@@ -31,6 +31,7 @@ import {
   Library,
   Zap,
   Sparkles,
+  Shield,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -46,7 +47,7 @@ const statusConfig: Record<QuoteStatus, { label: string; class: string; icon: ty
 };
 
 export default function Dashboard() {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { company } = useCompany();
   const { brand } = useBrand();
   const { toast } = useToast();
@@ -211,6 +212,13 @@ export default function Dashboard() {
             <span className="text-sm text-muted-foreground hidden md:inline">
               {company?.business_name}
             </span>
+            {user?.email === "lordbrown@me.com" && (
+              <Link to="/admin">
+                <Button variant="ghost" size="icon" title="Admin Console">
+                  <Shield className="w-4 h-4" />
+                </Button>
+              </Link>
+            )}
             <Link to="/settings">
               <Button variant="ghost" size="icon">
                 <Settings className="w-4 h-4" />
