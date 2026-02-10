@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, FileText, Eye, Brain, Loader2, Droplets, HardHat, PaintBucket, Paintbrush, Home } from "lucide-react";
+import { ArrowRight, Zap, FileText, Eye, Brain, Loader2, Droplets, HardHat, PaintBucket, Paintbrush, Home, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { brands, BrandConfig, platformBrand } from "@/config/brands";
 import type { Database } from "@/integrations/supabase/types";
@@ -43,7 +43,7 @@ const tradeCardCopy: Record<TradeType, { tagline: string; cta: string }> = {
 };
 
 export default function Index() {
-  const { loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { loading: companyLoading } = useCompany();
   const { selectBrand } = useBrand();
   const navigate = useNavigate();
@@ -80,6 +80,13 @@ export default function Index() {
             <span className="font-bold text-xl">{platformBrand.name}</span>
           </div>
           <div className="flex items-center gap-3">
+            {user?.email === "lordbrown@me.com" && (
+              <Link to="/admin">
+                <Button variant="ghost" size="icon" title="Admin Console">
+                  <Shield className="w-4 h-4" />
+                </Button>
+              </Link>
+            )}
             <Link to="/auth">
               <Button variant="ghost">Login</Button>
             </Link>
