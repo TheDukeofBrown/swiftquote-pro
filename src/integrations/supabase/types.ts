@@ -376,6 +376,41 @@ export type Database = {
           },
         ]
       }
+      quote_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          quote_id: string
+          revoked_at: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          quote_id: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          quote_id?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_tokens_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quotes: {
         Row: {
           accepted_at: string | null
@@ -456,6 +491,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rate_limit_counters: {
+        Row: {
+          count: number
+          id: string
+          key: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          id?: string
+          key: string
+          window_start?: string
+        }
+        Update: {
+          count?: number
+          id?: string
+          key?: string
+          window_start?: string
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -557,6 +613,7 @@ export type Database = {
     }
     Functions: {
       admin_can_modify: { Args: never; Returns: boolean }
+      admin_check_immutability: { Args: never; Returns: Json }
       admin_get_audit_log: {
         Args: { p_limit?: number; p_offset?: number }
         Returns: {
@@ -653,16 +710,25 @@ export type Database = {
         Args: { p_company_id: string; p_reason: string }
         Returns: boolean
       }
+      admin_regenerate_quote_token: {
+        Args: { p_quote_id: string }
+        Returns: Json
+      }
       admin_resend_quote: { Args: { p_quote_id: string }; Returns: Json }
       admin_set_company_note: {
         Args: { p_company_id: string; p_note: string }
         Returns: boolean
       }
       admin_unlock_company: { Args: { p_company_id: string }; Returns: boolean }
+      admin_verify_tenant_isolation: { Args: never; Returns: Json }
       can_modify_quotes: { Args: { _company_id: string }; Returns: boolean }
       get_admin_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["admin_role"]
+      }
+      increment_rate_limit: {
+        Args: { p_key: string; p_window: string }
+        Returns: undefined
       }
       increment_usage: {
         Args: { p_company_id: string; p_metric: string }

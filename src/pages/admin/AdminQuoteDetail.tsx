@@ -5,16 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
 import { useAdmin, useAdminActions } from "@/hooks/useAdmin";
 import { toast } from "sonner";
-import { Loader2, ArrowLeft, Send, FileText, Mail } from "lucide-react";
+import { Loader2, ArrowLeft, Send, FileText, Mail, RefreshCw, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,6 +67,9 @@ export default function AdminQuoteDetail() {
   const [emailEvents, setEmailEvents] = useState<EmailEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [resending, setResending] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenerateDialogOpen, setRegenerateDialogOpen] = useState(false);
+  const [resendDialogOpen, setResendDialogOpen] = useState(false);
 
   const { canModify } = useAdmin();
   const { resendQuote } = useAdminActions();
@@ -131,26 +132,32 @@ export default function AdminQuoteDetail() {
     try {
       await resendQuote(id);
       toast.success("Quote resent successfully");
-      
-      // Refresh events
-      const { data: eventsData } = await supabase
-        .from("quote_events")
-        .select("*")
-        .eq("quote_id", id)
-        .order("created_at", { ascending: false });
+      setResendDialogOpen(false);
+      const { data: eventsData } = await supabase.from("quote_events").select("*").eq("quote_id", id).order("created_at", { ascending: false });
       setQuoteEvents(eventsData || []);
-
-      const { data: emailData } = await supabase
-        .from("email_events")
-        .select("*")
-        .eq("quote_id", id)
-        .order("created_at", { ascending: false });
+      const { data: emailData } = await supabase.from("email_events").select("*").eq("quote_id", id).order("created_at", { ascending: false });
       setEmailEvents(emailData || []);
     } catch (err) {
-      console.error("Failed to resend quote:", err);
       toast.error(err instanceof Error ? err.message : "Failed to resend quote");
     } finally {
       setResending(false);
+    }
+  };
+
+  const handleRegenerateToken = async () => {
+    if (!id || !canModify) return;
+    setRegenerating(true);
+    try {
+      const { data, error } = await supabase.rpc("admin_regenerate_quote_token", { p_quote_id: id });
+      if (error) throw error;
+      toast.success("Public link regenerated. Old links are now invalid.");
+      setRegenerateDialogOpen(false);
+      const { data: eventsData } = await supabase.from("quote_events").select("*").eq("quote_id", id).order("created_at", { ascending: false });
+      setQuoteEvents(eventsData || []);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to regenerate link");
+    } finally {
+      setRegenerating(false);
     }
   };
 
@@ -220,30 +227,63 @@ export default function AdminQuoteDetail() {
             </div>
           </div>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <Button 
-                    onClick={handleResendQuote} 
-                    disabled={resending || !quote.customer_email || !canModify}
-                  >
-                    {resending ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    ) : (
-                      <Send className="w-4 h-4 mr-2" />
-                    )}
-                    Resend Quote
+          <div className="flex gap-2">
+            {/* Regenerate Link */}
+            <Dialog open={regenerateDialogOpen} onOpenChange={setRegenerateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" disabled={!canModify}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Regenerate Link
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                    Regenerate Public Link
+                  </DialogTitle>
+                  <DialogDescription>
+                    This will revoke all existing public links for this quote and create a new one. Customers with old links will no longer be able to access the quote.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setRegenerateDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleRegenerateToken} disabled={regenerating} variant="destructive">
+                    {regenerating && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                    Revoke &amp; Regenerate
                   </Button>
-                </span>
-              </TooltipTrigger>
-              {!canModify && (
-                <TooltipContent>
-                  <p>Support role cannot resend quotes</p>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Resend Quote */}
+            <Dialog open={resendDialogOpen} onOpenChange={setResendDialogOpen}>
+              <DialogTrigger asChild>
+                <Button disabled={!quote.customer_email || !canModify}>
+                  <Send className="w-4 h-4 mr-2" />
+                  Resend Quote
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                    Resend Quote
+                  </DialogTitle>
+                  <DialogDescription>
+                    This will generate a new PDF and send it to {quote.customer_email}. A new public link will be included.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setResendDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleResendQuote} disabled={resending}>
+                    {resending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                    Confirm Resend
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

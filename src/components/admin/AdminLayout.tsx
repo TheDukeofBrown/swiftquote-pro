@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut,
   Activity,
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/admin/quotes", label: "Quotes", icon: FileText },
   { href: "/admin/events", label: "Events", icon: Activity },
   { href: "/admin/audit", label: "Audit Log", icon: ClipboardList },
+  { href: "/admin/security", label: "Security", icon: Shield },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {

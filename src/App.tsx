@@ -33,6 +33,7 @@ import AdminQuotes from "./pages/admin/AdminQuotes";
 import AdminQuoteDetail from "./pages/admin/AdminQuoteDetail";
 import AdminEvents from "./pages/admin/AdminEvents";
 import AdminAudit from "./pages/admin/AdminAudit";
+import AdminSecurity from "./pages/admin/AdminSecurity";
 
 const queryClient = new QueryClient();
 
@@ -188,6 +189,14 @@ const App = () => (
                     element={
                       <AdminProtectedRoute>
                         <AdminAudit />
+                      </AdminProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/security"
+                    element={
+                      <AdminProtectedRoute>
+                        <AdminSecurity />
                       </AdminProtectedRoute>
                     }
                   />

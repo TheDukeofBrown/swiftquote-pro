@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { 
   Check, X, Loader2, FileText, Calendar, MapPin, 
-  Phone, Mail, Building2, AlertCircle, CheckCircle2, XCircle 
+  Phone, Mail, Building2, AlertCircle, CheckCircle2, XCircle, Clock 
 } from "lucide-react";
 
 interface QuoteItem {
@@ -70,6 +69,8 @@ export default function QuoteView() {
   const [quote, setQuote] = useState<QuoteData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [expiredCompanyName, setExpiredCompanyName] = useState<string | null>(null);
   const [responding, setResponding] = useState(false);
 
   useEffect(() => {
@@ -80,15 +81,9 @@ export default function QuoteView() {
     if (!quoteId) return;
 
     try {
-      const { data, error } = await supabase.functions.invoke("quote-public", {
-        method: "GET",
-        body: null,
-        headers: {},
-      });
-
-      // The invoke method doesn't support query params directly, so we use fetch
+      // Use token-based lookup (quoteId is actually the token in the URL)
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quote-public?id=${quoteId}`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quote-public?token=${quoteId}`,
         {
           method: "GET",
           headers: {
@@ -101,6 +96,8 @@ export default function QuoteView() {
 
       if (!response.ok) {
         setError(result.error || "Failed to load quote");
+        setErrorCode(result.code || null);
+        if (result.company_name) setExpiredCompanyName(result.company_name);
         return;
       }
 
@@ -119,7 +116,7 @@ export default function QuoteView() {
     setResponding(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quote-public?id=${quoteId}`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quote-public?token=${quoteId}`,
         {
           method: "POST",
           headers: {
@@ -136,7 +133,6 @@ export default function QuoteView() {
         return;
       }
 
-      // Update local state
       setQuote((prev) =>
         prev
           ? {
@@ -174,6 +170,27 @@ export default function QuoteView() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Expired/revoked token error - friendly message
+  if (errorCode === "TOKEN_EXPIRED" || errorCode === "TOKEN_REVOKED") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6 text-center">
+            <Clock className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+            <h1 className="text-xl font-bold mb-2">
+              {errorCode === "TOKEN_EXPIRED" ? "Quote Link Expired" : "Quote Link Revoked"}
+            </h1>
+            <p className="text-muted-foreground mb-4">
+              {errorCode === "TOKEN_EXPIRED"
+                ? `This quote link has expired. Please contact ${expiredCompanyName || "the business"} to request a new link.`
+                : "This quote link is no longer valid. Please contact the business for a new link."}
+            </p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -296,15 +313,12 @@ export default function QuoteView() {
         <Card>
           <CardContent className="pt-6">
             <div className="space-y-3">
-              {/* Header */}
               <div className="grid grid-cols-12 text-xs font-semibold text-muted-foreground uppercase tracking-wider pb-2 border-b">
                 <div className="col-span-6">Description</div>
                 <div className="col-span-2 text-center">Qty</div>
                 <div className="col-span-2 text-right">Price</div>
                 <div className="col-span-2 text-right">Total</div>
               </div>
-
-              {/* Items */}
               {quote.items.map((item, index) => (
                 <div key={index} className="grid grid-cols-12 py-2 text-sm border-b border-border/50">
                   <div className="col-span-6">{item.description}</div>
@@ -318,10 +332,7 @@ export default function QuoteView() {
                 </div>
               ))}
             </div>
-
             <Separator className="my-4" />
-
-            {/* Totals */}
             <div className="space-y-2 max-w-xs ml-auto">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>

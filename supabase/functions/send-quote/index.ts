@@ -294,9 +294,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Build customer view URL
+    // Generate public token for this quote
+    const { data: tokenData, error: tokenError } = await serviceClient
+      .from("quote_tokens")
+      .insert({ quote_id: quoteId })
+      .select("token")
+      .single();
+
+    if (tokenError) {
+      console.error("Token generation error:", tokenError);
+      return new Response(JSON.stringify({ 
+        error: "Failed to generate secure quote link",
+        code: "TOKEN_FAILED"
+      }), { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      });
+    }
+
+    // Build customer view URL with token
     const baseUrl = Deno.env.get("FRONTEND_URL") || "https://workquote.app";
-    const customerViewUrl = `${baseUrl}/q/${quoteId}`;
+    const customerViewUrl = `${baseUrl}/q/${tokenData.token}`;
     const brandName = tradeNames[company.trade] || "WorkQuote";
     const emailSubject = `Quote ${quote.reference} from ${company.business_name}`;
 
