@@ -210,7 +210,7 @@ export default function QuoteView() {
   }
 
   const brandHue = quote.company?.trade ? tradeColors[quote.company.trade] : "215 16% 47%";
-  const brandName = quote.company?.trade ? tradeNames[quote.company.trade] : "WorkQuote";
+  const brandName = quote.company?.trade ? tradeNames[quote.company.trade] : "QuoteReady";
   const isResolved = quote.status === "accepted" || quote.status === "declined";
 
   return (
@@ -456,7 +456,7 @@ export default function QuoteView() {
 
         {/* Footer */}
         <p className="text-center text-xs text-muted-foreground py-4">
-          {brandName} — Powered by WorkQuote
+          {brandName} — Powered by QuoteReady
         </p>
       </div>
     </div>

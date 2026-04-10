@@ -97,7 +97,7 @@ export default function QuotePDFPreview() {
                 
                 {/* Footer */}
                 <div className="px-6 py-3 bg-slate-50 border-t border-slate-100">
-                  <p className="text-[10px] text-slate-400 text-center">PlumbQuote — Powered by WorkQuote</p>
+                  <p className="text-[10px] text-slate-400 text-center"><p className="text-[10px] text-slate-400 text-center">PlumbQuote — Powered by QuoteReady</p></p>
                 </div>
               </div>
               

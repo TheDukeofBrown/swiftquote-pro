@@ -16,7 +16,7 @@ interface QuoteItem {
 
 async function hashIP(ip: string): Promise<string> {
   const encoder = new TextEncoder();
-  const data = encoder.encode(ip + "workquote-salt-2024");
+  const data = encoder.encode(ip + "const data = encoder.encode(ip + "quoteready-salt-2024");");
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");

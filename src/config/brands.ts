@@ -158,9 +158,9 @@ export const brands: Record<TradeType, BrandConfig> = {
   },
 };
 
-// Platform brand - WorkQuote is the master brand
+// Platform brand - QuoteReady is the master brand
 export const platformBrand = {
-  name: "WorkQuote",
+  name: "QuoteReady",
   tagline: "Professional Quotes in Under 60 Seconds",
   description: "The quoting platform built for UK tradespeople",
 };
@@ -168,7 +168,7 @@ export const platformBrand = {
 // Default brand for unauthenticated users or landing page
 export const defaultBrand: Omit<BrandConfig, "id"> & { id: null } = {
   id: null,
-  name: "WorkQuote",
+  name: "QuoteReady",
   tagline: "Professional Quotes in Under 60 Seconds",
   description: "The quoting platform built for UK tradespeople",
   primaryHue: 220,

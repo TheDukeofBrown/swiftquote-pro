@@ -313,15 +313,15 @@ Deno.serve(async (req) => {
     }
 
     // Build customer view URL with token
-    const baseUrl = Deno.env.get("FRONTEND_URL") || "https://workquote.app";
+    const baseUrl = Deno.env.get("FRONTEND_URL") || "https://quoteready.uk";
     const customerViewUrl = `${baseUrl}/q/${tokenData.token}`;
-    const brandName = tradeNames[company.trade] || "WorkQuote";
+    const brandName = tradeNames[company.trade] || "QuoteReady";
     const emailSubject = `Quote ${quote.reference} from ${company.business_name}`;
 
     // Send email
     console.log(`Sending email to ${recipientEmail}...`);
     const emailResult = await resend.emails.send({
-      from: `${company.business_name} <quotes@workquote.app>`,
+      from: `${company.business_name} <quotes@quoteready.uk>`,
       to: [recipientEmail],
       subject: emailSubject,
       html: generateEmailHTML(quote, company, brandName, customerViewUrl, testMode),
