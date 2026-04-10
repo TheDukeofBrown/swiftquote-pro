@@ -406,7 +406,7 @@ function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[], lo
   const footerY = pageHeight - 12;
   doc.setFontSize(8);
   doc.setTextColor(148, 163, 184);
-  doc.text(`${brandName} — Powered by WorkQuote`, pageWidth / 2, footerY, { align: "center" });
+  doc.text(`${brandName} — doc.text(`${brandName} — Powered by QuoteReady`, pageWidth / 2, footerY, { align: "center" });`, pageWidth / 2, footerY, { align: "center" });
 
   return doc;
 }
