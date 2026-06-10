@@ -103,31 +103,29 @@ export default function Index() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Text content */}
             <div className="text-center lg:text-left">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 animate-fade-in">
-                {platformBrand.name}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in">
+                Stop quoting timewasters. Get paid on time.
               </h1>
-              <p className="text-xl md:text-2xl font-medium text-foreground mb-4 animate-fade-in" style={{ animationDelay: "0.05s" }}>
-                Professional quotes for trades — in under 60 seconds.
+              <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+                {platformBrand.name} filters out the tyre-kickers before you waste an evening, prices the job in under 60 seconds, and chases your money so you don't have to.
               </p>
-              <div className="text-lg text-muted-foreground mb-6 animate-fade-in space-y-1" style={{ animationDelay: "0.1s" }}>
-                <p>No paperwork. No spreadsheets. No evenings lost to admin.</p>
-              </div>
-              <p className="text-base text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "0.15s" }}>
-                Built for busy trades who just want to get the job priced and sent.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-in" style={{ animationDelay: "0.2s" }}>
-                <Button size="lg" className="px-8" onClick={() => document.getElementById('trade-selector')?.scrollIntoView({ behavior: 'smooth' })}>
-                  Choose Your Trade <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
                 <Link to="/auth">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                    Login
+                  <Button size="lg" className="px-8">
+                    Start free — no card needed <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('trade-selector')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Watch a quote built in 58 seconds
+                </button>
               </div>
             </div>
-            
+
             {/* Phone mockup */}
             <div className="flex justify-center lg:justify-end animate-fade-in" style={{ animationDelay: "0.3s" }}>
               <HeroMockup />
