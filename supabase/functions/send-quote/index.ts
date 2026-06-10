@@ -315,7 +315,7 @@ Deno.serve(async (req) => {
     // Build customer view URL with token
     const baseUrl = Deno.env.get("FRONTEND_URL") || "https://quoteready.uk";
     const customerViewUrl = `${baseUrl}/q/${tokenData.token}`;
-    const brandName = tradeNames[company.trade] || "QuoteReady";
+    const brandName = tradeNames[company.trade] || "QuoteSorted";
     const emailSubject = `Quote ${quote.reference} from ${company.business_name}`;
 
     // Send email
