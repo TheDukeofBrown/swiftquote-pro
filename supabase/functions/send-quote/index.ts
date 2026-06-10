@@ -315,7 +315,7 @@ Deno.serve(async (req) => {
     // Build customer view URL with token
     const baseUrl = Deno.env.get("FRONTEND_URL") || "https://quoteready.uk";
     const customerViewUrl = `${baseUrl}/q/${tokenData.token}`;
-    const brandName = tradeNames[company.trade] || "QuoteReady";
+    const brandName = tradeNames[company.trade] || "QuoteSorted";
     const emailSubject = `Quote ${quote.reference} from ${company.business_name}`;
 
     // Send email
@@ -505,7 +505,7 @@ function generateEmailHTML(
       </p>
       
       <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 30px;">
-        ${brandName} — Powered by QuoteReady
+        ${brandName} — Powered by QuoteSorted
       </p>
     </body>
     </html>
@@ -520,7 +520,7 @@ function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[], lo
   let y = margin;
 
   const brandColor = tradeColors[company.trade] || [100, 116, 139];
-  const brandName = tradeNames[company.trade] || "QuoteReady";
+  const brandName = tradeNames[company.trade] || "QuoteSorted";
 
   // Header
   doc.setFillColor(...brandColor);
@@ -711,7 +711,7 @@ function generateQuotePDF(quote: Quote, company: Company, items: QuoteItem[], lo
   const footerY = pageHeight - 12;
   doc.setFontSize(8);
   doc.setTextColor(148, 163, 184);
-  doc.text(`${brandName} — Powered by QuoteReady`, pageWidth / 2, footerY, { align: "center" });
+  doc.text(`${brandName} — Powered by QuoteSorted`, pageWidth / 2, footerY, { align: "center" });
 
   return doc;
 }

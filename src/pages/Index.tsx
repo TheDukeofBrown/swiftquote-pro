@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
 import { useBrand } from "@/contexts/BrandContext";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, FileText, Eye, Brain, Loader2, Droplets, HardHat, PaintBucket, Paintbrush, Home, Shield } from "lucide-react";
+import { ArrowRight, Zap, FileText, Eye, Brain, Loader2, Droplets, HardHat, PaintBucket, Paintbrush, Home, Shield, Filter, Smartphone, ClipboardCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { brands, BrandConfig, platformBrand } from "@/config/brands";
 import type { Database } from "@/integrations/supabase/types";
@@ -103,31 +103,29 @@ export default function Index() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Text content */}
             <div className="text-center lg:text-left">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4 animate-fade-in">
-                {platformBrand.name}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 animate-fade-in">
+                Stop quoting timewasters. Get paid on time.
               </h1>
-              <p className="text-xl md:text-2xl font-medium text-foreground mb-4 animate-fade-in" style={{ animationDelay: "0.05s" }}>
-                Professional quotes for trades — in under 60 seconds.
+              <p className="text-lg md:text-xl text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+                {platformBrand.name} filters out the tyre-kickers before you waste an evening, prices the job in under 60 seconds, and chases your money so you don't have to.
               </p>
-              <div className="text-lg text-muted-foreground mb-6 animate-fade-in space-y-1" style={{ animationDelay: "0.1s" }}>
-                <p>No paperwork. No spreadsheets. No evenings lost to admin.</p>
-              </div>
-              <p className="text-base text-muted-foreground mb-8 animate-fade-in" style={{ animationDelay: "0.15s" }}>
-                Built for busy trades who just want to get the job priced and sent.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-in" style={{ animationDelay: "0.2s" }}>
-                <Button size="lg" className="px-8" onClick={() => document.getElementById('trade-selector')?.scrollIntoView({ behavior: 'smooth' })}>
-                  Choose Your Trade <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center animate-fade-in" style={{ animationDelay: "0.2s" }}>
                 <Link to="/auth">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                    Login
+                  <Button size="lg" className="px-8">
+                    Start free — no card needed <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => document.getElementById('trade-selector')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Watch a quote built in 58 seconds
+                </button>
               </div>
             </div>
-            
+
             {/* Phone mockup */}
             <div className="flex justify-center lg:justify-end animate-fade-in" style={{ animationDelay: "0.3s" }}>
               <HeroMockup />
@@ -224,41 +222,32 @@ export default function Index() {
           <div className="text-center max-w-2xl mx-auto mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">Why trades use {platformBrand.name}</h2>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-5xl mx-auto">
-            <div className="text-center animate-slide-up">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-6 h-6 text-primary" />
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="bg-card border border-border rounded-xl p-6 animate-slide-up">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                <Filter className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">Quote in minutes</h3>
+              <h3 className="font-semibold text-lg mb-3">Know who's serious before you visit</h3>
               <p className="text-muted-foreground text-sm">
-                Create and send professional quotes from your phone.
+                Your enquiry link asks the questions you'd ask: budget, timescale, photos of the job. Tyre-kickers get filtered. Real jobs land in your phone, ready to price.
               </p>
             </div>
-            <div className="text-center animate-slide-up" style={{ animationDelay: "0.1s" }}>
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-6 h-6 text-primary" />
+            <div className="bg-card border border-border rounded-xl p-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                <Smartphone className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">Look professional</h3>
+              <h3 className="font-semibold text-lg mb-3">Quote from the van in under a minute</h3>
               <p className="text-muted-foreground text-sm">
-                Clean, branded PDFs customers trust.
+                Your prices, saved once. Tap the items, send a professional quote with an Accept button and a deposit link. No laptop, no evening lost.
               </p>
             </div>
-            <div className="text-center animate-slide-up" style={{ animationDelay: "0.2s" }}>
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Eye className="w-6 h-6 text-primary" />
+            <div className="bg-card border border-border rounded-xl p-6 animate-slide-up" style={{ animationDelay: "0.2s" }}>
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                <ClipboardCheck className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="font-semibold text-lg mb-2">Stay in control</h3>
+              <h3 className="font-semibold text-lg mb-3">Your invoices chase themselves</h3>
               <p className="text-muted-foreground text-sm">
-                See when quotes are viewed and accepted.
-              </p>
-            </div>
-            <div className="text-center animate-slide-up" style={{ animationDelay: "0.3s" }}>
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Brain className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Built for trades</h3>
-              <p className="text-muted-foreground text-sm">
-                Defaults, language, and pricing that match your work.
+                Automatic reminders. For business customers, every overdue invoice shows what they legally owe you under the Late Payment of Commercial Debts Act. Watch how fast they pay when it's in writing.
               </p>
             </div>
           </div>

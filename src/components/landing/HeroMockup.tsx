@@ -22,7 +22,7 @@ export default function HeroMockup() {
                 <FileText className="w-5 h-5 text-primary-foreground" />
                 <span className="font-semibold text-primary-foreground text-sm">New Quote</span>
               </div>
-              <span className="text-xs text-primary-foreground/80">Q-2024-047</span>
+              <span className="text-xs text-primary-foreground/80">QS-2024-047</span>
             </div>
           </div>
 

@@ -158,18 +158,18 @@ export const brands: Record<TradeType, BrandConfig> = {
   },
 };
 
-// Platform brand - QuoteReady is the master brand
+// Platform brand - QuoteSorted is the master brand
 export const platformBrand = {
-  name: "QuoteReady",
-  tagline: "Professional Quotes in Under 60 Seconds",
+  name: "QuoteSorted",
+  tagline: "Stop quoting timewasters. Get paid on time.",
   description: "The quoting platform built for UK tradespeople",
 };
 
 // Default brand for unauthenticated users or landing page
 export const defaultBrand: Omit<BrandConfig, "id"> & { id: null } = {
   id: null,
-  name: "QuoteReady",
-  tagline: "Professional Quotes in Under 60 Seconds",
+  name: "QuoteSorted",
+  tagline: "Stop quoting timewasters. Get paid on time.",
   description: "The quoting platform built for UK tradespeople",
   primaryHue: 220,
   accentHue: 210,
