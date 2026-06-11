@@ -669,7 +669,17 @@ export default function QuoteBuilder() {
           </CardContent>
         </Card>
 
+        {/* Payment schedule */}
+        <PaymentScheduleSection
+          value={paymentSchedule}
+          onChange={setPaymentSchedule}
+          total={total}
+          materialsTotal={materialsTotal}
+          materialsThreshold={materialsThreshold}
+        />
+
         {/* Totals */}
+
         <Card className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
           <CardContent className="pt-4 pb-4">
             <div className="space-y-2">
