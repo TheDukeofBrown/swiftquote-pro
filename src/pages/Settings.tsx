@@ -298,7 +298,125 @@ export default function Settings() {
             <PriceLibrarySettings />
           </TabsContent>
 
-          {/* Billing Tab */}
+          {/* Payments Tab */}
+          <TabsContent value="payments" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="w-5 h-5" />
+                  Stripe Connect
+                </CardTitle>
+                <CardDescription>
+                  Take booking payments and staged payments straight into your bank account.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between rounded-md border border-border p-3">
+                  <div>
+                    <div className="text-sm font-medium">Status</div>
+                    <div className="text-xs text-muted-foreground">
+                      {company?.stripe_connect_status === "active"
+                        ? "Connected and ready to accept payments"
+                        : company?.stripe_connect_status === "pending"
+                        ? "Onboarding in progress — finish on Stripe to activate"
+                        : "Not connected"}
+                    </div>
+                  </div>
+                  <Badge
+                    variant={
+                      company?.stripe_connect_status === "active"
+                        ? "default"
+                        : company?.stripe_connect_status === "pending"
+                        ? "secondary"
+                        : "outline"
+                    }
+                    className="capitalize"
+                  >
+                    {company?.stripe_connect_status || "not_connected"}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={handleConnectStripe} disabled={connecting}>
+                    {connecting ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <ExternalLink className="w-4 h-4 mr-1" />
+                    )}
+                    {company?.stripe_connect_status === "active"
+                      ? "Manage Stripe account"
+                      : company?.stripe_connect_status === "pending"
+                      ? "Continue onboarding"
+                      : "Connect Stripe"}
+                  </Button>
+                  {company?.stripe_account_id && (
+                    <Button variant="outline" onClick={handleRefreshStripeStatus} disabled={refreshing}>
+                      {refreshing && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+                      Refresh status
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Smart booking suggestion</CardTitle>
+                <CardDescription>
+                  When materials on a quote exceed this amount, we'll suggest taking a
+                  booking payment.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Label htmlFor="materialsThreshold">Suggest booking payment when materials exceed (£)</Label>
+                <Input
+                  id="materialsThreshold"
+                  type="number"
+                  min="0"
+                  step="50"
+                  value={materialsThreshold}
+                  onChange={(e) => setMaterialsThreshold(e.target.value)}
+                  className="max-w-[200px] mt-2"
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Landmark className="w-5 h-5" />
+                  Bank transfer fallback
+                </CardTitle>
+                <CardDescription>
+                  Shown to customers when Stripe is not connected and they accept a
+                  quote with a booking payment.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="sortCode">Sort code</Label>
+                    <Input
+                      id="sortCode"
+                      placeholder="00-00-00"
+                      value={bankSortCode}
+                      onChange={(e) => setBankSortCode(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="accountNumber">Account number</Label>
+                    <Input
+                      id="accountNumber"
+                      placeholder="12345678"
+                      value={bankAccountNumber}
+                      onChange={(e) => setBankAccountNumber(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+
           <TabsContent value="billing" className="space-y-6">
             {/* Current Plan & Usage */}
             <UsageDisplay />
