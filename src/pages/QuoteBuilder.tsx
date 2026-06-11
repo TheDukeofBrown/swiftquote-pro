@@ -124,7 +124,7 @@ export default function QuoteBuilder() {
       booking_payment_type: quote.booking_payment_type as PaymentScheduleValue["booking_payment_type"],
       booking_payment_value: quote.booking_payment_value ? Number(quote.booking_payment_value) : null,
       booking_payment_amount: quote.booking_payment_amount ? Number(quote.booking_payment_amount) : null,
-      staged_payments: (quote.staged_payments as PaymentScheduleValue["staged_payments"]) || null,
+      staged_payments: (quote.staged_payments as unknown as PaymentScheduleValue["staged_payments"]) || null,
     });
 
     const { data: quoteItems } = await supabase
