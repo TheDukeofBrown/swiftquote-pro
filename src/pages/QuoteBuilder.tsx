@@ -13,6 +13,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useToast } from "@/hooks/use-toast";
 import { PriceLibraryPanel } from "@/components/PriceLibraryPanel";
 import {
+  PaymentScheduleSection,
+  type PaymentScheduleValue,
+} from "@/components/PaymentScheduleSection";
+import {
   ArrowLeft,
   Plus,
   Trash2,
@@ -23,6 +27,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+
 
 type QuoteItem = {
   id?: string;
