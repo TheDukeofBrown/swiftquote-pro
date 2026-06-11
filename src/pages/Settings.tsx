@@ -72,20 +72,64 @@ export default function Settings() {
       if (error) throw error;
 
       await refetch();
-      toast({
-        title: "Settings saved",
-        description: "Your business details have been updated.",
-      });
+      toast({ title: "Settings saved", description: "Your business details have been updated." });
     } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err.message || "Failed to save settings",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: err.message || "Failed to save settings", variant: "destructive" });
     } finally {
       setSaving(false);
     }
   };
+
+  const handlePaymentsSave = async () => {
+    if (!company) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("companies")
+        .update({
+          materials_threshold: parseFloat(materialsThreshold) || 500,
+          bank_sort_code: bankSortCode.trim() || null,
+          bank_account_number: bankAccountNumber.trim() || null,
+        })
+        .eq("id", company.id);
+      if (error) throw error;
+      await refetch();
+      toast({ title: "Payment settings saved" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to save", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleConnectStripe = async () => {
+    setConnecting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-connect-onboard", {
+        body: { return_url: `${window.location.origin}/settings?tab=payments` },
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (err: any) {
+      toast({ title: "Could not start Stripe onboarding", description: err.message, variant: "destructive" });
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const handleRefreshStripeStatus = async () => {
+    setRefreshing(true);
+    try {
+      await supabase.functions.invoke("stripe-connect-status", { body: {} });
+      await refetch();
+      toast({ title: "Status refreshed" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
 
   const handleSignOut = async () => {
     await signOut();
