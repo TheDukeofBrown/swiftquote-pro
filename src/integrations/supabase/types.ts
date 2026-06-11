@@ -71,13 +71,18 @@ export type Database = {
       companies: {
         Row: {
           address: string | null
+          bank_account_number: string | null
+          bank_sort_code: string | null
           business_name: string
           created_at: string
           default_labour_rate: number | null
           email: string | null
           id: string
           logo_url: string | null
+          materials_threshold: number
           phone: string | null
+          stripe_account_id: string | null
+          stripe_connect_status: Database["public"]["Enums"]["stripe_connect_status"]
           trade: Database["public"]["Enums"]["trade_type"]
           updated_at: string
           user_id: string
@@ -86,13 +91,18 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          bank_account_number?: string | null
+          bank_sort_code?: string | null
           business_name: string
           created_at?: string
           default_labour_rate?: number | null
           email?: string | null
           id?: string
           logo_url?: string | null
+          materials_threshold?: number
           phone?: string | null
+          stripe_account_id?: string | null
+          stripe_connect_status?: Database["public"]["Enums"]["stripe_connect_status"]
           trade: Database["public"]["Enums"]["trade_type"]
           updated_at?: string
           user_id: string
@@ -101,13 +111,18 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          bank_account_number?: string | null
+          bank_sort_code?: string | null
           business_name?: string
           created_at?: string
           default_labour_rate?: number | null
           email?: string | null
           id?: string
           logo_url?: string | null
+          materials_threshold?: number
           phone?: string | null
+          stripe_account_id?: string | null
+          stripe_connect_status?: Database["public"]["Enums"]["stripe_connect_status"]
           trade?: Database["public"]["Enums"]["trade_type"]
           updated_at?: string
           user_id?: string
@@ -376,6 +391,66 @@ export type Database = {
           },
         ]
       }
+      quote_payments: {
+        Row: {
+          amount: number
+          company_id: string
+          created_at: string
+          currency: string
+          id: string
+          paid_at: string | null
+          quote_id: string
+          stage_label: string
+          status: Database["public"]["Enums"]["quote_payment_status"]
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          company_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          quote_id: string
+          stage_label: string
+          status?: Database["public"]["Enums"]["quote_payment_status"]
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          company_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          quote_id?: string
+          stage_label?: string
+          status?: Database["public"]["Enums"]["quote_payment_status"]
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quote_payments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quote_payments_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quote_tokens: {
         Row: {
           created_at: string
@@ -414,6 +489,11 @@ export type Database = {
       quotes: {
         Row: {
           accepted_at: string | null
+          booking_payment_amount: number | null
+          booking_payment_type:
+            | Database["public"]["Enums"]["booking_payment_type"]
+            | null
+          booking_payment_value: number | null
           company_id: string
           created_at: string
           customer_email: string | null
@@ -423,8 +503,11 @@ export type Database = {
           id: string
           job_address: string | null
           notes: string | null
+          payment_mode: Database["public"]["Enums"]["payment_mode"]
+          payment_terms_days: number | null
           reference: string
           sent_at: string | null
+          staged_payments: Json | null
           status: Database["public"]["Enums"]["quote_status"]
           subtotal: number
           total: number
@@ -435,6 +518,11 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          booking_payment_amount?: number | null
+          booking_payment_type?:
+            | Database["public"]["Enums"]["booking_payment_type"]
+            | null
+          booking_payment_value?: number | null
           company_id: string
           created_at?: string
           customer_email?: string | null
@@ -444,8 +532,11 @@ export type Database = {
           id?: string
           job_address?: string | null
           notes?: string | null
+          payment_mode?: Database["public"]["Enums"]["payment_mode"]
+          payment_terms_days?: number | null
           reference: string
           sent_at?: string | null
+          staged_payments?: Json | null
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number
           total?: number
@@ -456,6 +547,11 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          booking_payment_amount?: number | null
+          booking_payment_type?:
+            | Database["public"]["Enums"]["booking_payment_type"]
+            | null
+          booking_payment_value?: number | null
           company_id?: string
           created_at?: string
           customer_email?: string | null
@@ -465,8 +561,11 @@ export type Database = {
           id?: string
           job_address?: string | null
           notes?: string | null
+          payment_mode?: Database["public"]["Enums"]["payment_mode"]
+          payment_terms_days?: number | null
           reference?: string
           sent_at?: string | null
+          staged_payments?: Json | null
           status?: Database["public"]["Enums"]["quote_status"]
           subtotal?: number
           total?: number
@@ -739,9 +838,13 @@ export type Database = {
     }
     Enums: {
       admin_role: "super_admin" | "admin" | "support"
+      booking_payment_type: "percent" | "fixed"
+      payment_mode: "none" | "booking" | "staged" | "account"
       price_item_type: "labour" | "material" | "service" | "uplift"
       price_item_unit: "each" | "hour" | "percent" | "metre" | "day"
+      quote_payment_status: "pending" | "paid"
       quote_status: "draft" | "sent" | "viewed" | "accepted" | "declined"
+      stripe_connect_status: "not_connected" | "pending" | "active"
       subscription_plan: "free" | "pro" | "business"
       subscription_status:
         | "trialing"
@@ -884,9 +987,13 @@ export const Constants = {
   public: {
     Enums: {
       admin_role: ["super_admin", "admin", "support"],
+      booking_payment_type: ["percent", "fixed"],
+      payment_mode: ["none", "booking", "staged", "account"],
       price_item_type: ["labour", "material", "service", "uplift"],
       price_item_unit: ["each", "hour", "percent", "metre", "day"],
+      quote_payment_status: ["pending", "paid"],
       quote_status: ["draft", "sent", "viewed", "accepted", "declined"],
+      stripe_connect_status: ["not_connected", "pending", "active"],
       subscription_plan: ["free", "pro", "business"],
       subscription_status: [
         "trialing",
