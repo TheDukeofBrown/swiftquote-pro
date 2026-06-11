@@ -87,6 +87,11 @@ export default function QuoteBuilder() {
   const vatRate = company?.vat_registered ? Number(company.vat_rate) : 0;
   const vatAmount = subtotalWithUplift * (vatRate / 100);
   const total = subtotalWithUplift + vatAmount;
+  const materialsTotal = regularItems
+    .filter((it) => it.item_type === "materials")
+    .reduce((s, it) => s + it.line_total, 0);
+  const materialsThreshold = Number(company?.materials_threshold || 500);
+
 
   // Load existing quote if editing
   useEffect(() => {
