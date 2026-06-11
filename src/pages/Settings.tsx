@@ -17,8 +17,9 @@ import { UsageDisplay } from "@/components/UsageDisplay";
 import { LogoUpload } from "@/components/LogoUpload";
 import { PriceLibrarySettings } from "@/components/PriceLibrarySettings";
 import { PLANS, getPlanInfo } from "@/config/plans";
-import { ArrowLeft, Loader2, Save, LogOut, Check, Crown, Zap, Clock, Library } from "lucide-react";
+import { ArrowLeft, Loader2, Save, LogOut, Check, Crown, Zap, Clock, Library, Wallet, Landmark, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 
 export default function Settings() {
   const navigate = useNavigate();
