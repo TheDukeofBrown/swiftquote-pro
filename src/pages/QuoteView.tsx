@@ -1,12 +1,25 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { 
-  Check, X, Loader2, FileText, Calendar, MapPin, 
-  Phone, Mail, Building2, AlertCircle, CheckCircle2, XCircle, Clock 
+import {
+  Check,
+  X,
+  Loader2,
+  FileText,
+  Calendar,
+  MapPin,
+  Phone,
+  Mail,
+  Building2,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Wallet,
+  Landmark,
 } from "lucide-react";
 
 interface QuoteItem {
@@ -26,6 +39,23 @@ interface Company {
   logo_url: string | null;
   vat_registered: boolean | null;
   vat_rate: number | null;
+  stripe_connect_status?: string | null;
+  bank_sort_code?: string | null;
+  bank_account_number?: string | null;
+}
+
+interface StagedPayment {
+  label: string;
+  percent: number;
+  amount: number;
+}
+
+interface QuotePayment {
+  id: string;
+  stage_label: string;
+  amount: number;
+  status: "pending" | "paid";
+  paid_at: string | null;
 }
 
 interface QuoteData {
@@ -41,11 +71,17 @@ interface QuoteData {
   status: string;
   accepted_at: string | null;
   declined_at: string | null;
+  payment_mode: "completion" | "booking" | "staged" | "account";
+  payment_terms_days: number | null;
+  booking_payment_type: "percent" | "fixed" | null;
+  booking_payment_value: number | null;
+  booking_payment_amount: number | null;
+  staged_payments: StagedPayment[] | null;
   company: Company | null;
   items: QuoteItem[];
+  payments: QuotePayment[];
 }
 
-// Trade brand colors
 const tradeColors: Record<string, string> = {
   plumber: "199 89% 48%",
   electrician: "217 91% 60%",
@@ -66,12 +102,16 @@ const tradeNames: Record<string, string> = {
 
 export default function QuoteView() {
   const { quoteId } = useParams<{ quoteId: string }>();
+  const [searchParams] = useSearchParams();
   const [quote, setQuote] = useState<QuoteData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [expiredCompanyName, setExpiredCompanyName] = useState<string | null>(null);
   const [responding, setResponding] = useState(false);
+  const [bankFallback, setBankFallback] = useState<{ amount: number; label: string } | null>(null);
+
+  const justPaid = searchParams.get("paid") === "1";
 
   useEffect(() => {
     fetchQuote();
@@ -79,30 +119,20 @@ export default function QuoteView() {
 
   const fetchQuote = async () => {
     if (!quoteId) return;
-
     try {
-      // Use token-based lookup (quoteId is actually the token in the URL)
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quote-public?token=${quoteId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
+        { method: "GET", headers: { "Content-Type": "application/json" } }
       );
-
       const result = await response.json();
-
       if (!response.ok) {
         setError(result.error || "Failed to load quote");
         setErrorCode(result.code || null);
         if (result.company_name) setExpiredCompanyName(result.company_name);
         return;
       }
-
       setQuote(result);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Quote fetch error:", err);
       setError("Failed to load quote");
     } finally {
@@ -110,60 +140,126 @@ export default function QuoteView() {
     }
   };
 
-  const handleResponse = async (action: "accept" | "decline") => {
-    if (!quoteId) return;
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(amount || 0);
 
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+  const markAcceptedNoPayment = async () => {
+    if (!quoteId) return;
     setResponding(true);
     try {
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quote-public?token=${quoteId}`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ action }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "accept" }),
         }
       );
-
       const result = await response.json();
-
       if (!response.ok) {
         setError(result.error || "Failed to update quote");
         return;
       }
-
       setQuote((prev) =>
         prev
-          ? {
-              ...prev,
-              status: result.status,
-              accepted_at: action === "accept" ? new Date().toISOString() : prev.accepted_at,
-              declined_at: action === "decline" ? new Date().toISOString() : prev.declined_at,
-            }
+          ? { ...prev, status: "accepted", accepted_at: new Date().toISOString() }
           : null
       );
-    } catch (err: any) {
-      console.error("Quote response error:", err);
-      setError("Failed to respond to quote");
     } finally {
       setResponding(false);
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-GB", {
-      style: "currency",
-      currency: "GBP",
-    }).format(amount);
+  const handleDecline = async () => {
+    if (!quoteId) return;
+    setResponding(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quote-public?token=${quoteId}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "decline" }),
+        }
+      );
+      const result = await response.json();
+      if (!response.ok) {
+        setError(result.error || "Failed to update quote");
+        return;
+      }
+      setQuote((prev) =>
+        prev
+          ? { ...prev, status: "declined", declined_at: new Date().toISOString() }
+          : null
+      );
+    } finally {
+      setResponding(false);
+    }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+  const startStripeCheckout = async (stage_label?: string, amount?: number) => {
+    if (!quoteId) return;
+    setResponding(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-booking-checkout`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ token: quoteId, stage_label, amount }),
+        }
+      );
+      const result = await res.json();
+      if (!res.ok || !result.url) {
+        throw new Error(result.error || "Could not start checkout");
+      }
+      window.location.href = result.url;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Checkout failed";
+      setError(msg);
+      setResponding(false);
+    }
+  };
+
+  const acceptBookingPayment = async () => {
+    if (!quote) return;
+    const stripeConnected = quote.company?.stripe_connect_status === "active";
+    if (stripeConnected) {
+      await startStripeCheckout(
+        "Booking payment",
+        Number(quote.booking_payment_amount || 0)
+      );
+    } else {
+      // Fallback: accept, show bank details
+      await markAcceptedNoPayment();
+      setBankFallback({
+        amount: Number(quote.booking_payment_amount || 0),
+        label: "booking payment",
+      });
+    }
+  };
+
+  const acceptFirstStaged = async () => {
+    if (!quote) return;
+    const stripeConnected = quote.company?.stripe_connect_status === "active";
+    const first = (quote.staged_payments || [])[0];
+    if (!first) return;
+    if (stripeConnected) {
+      await startStripeCheckout(first.label, Number(first.amount));
+    } else {
+      await markAcceptedNoPayment();
+      setBankFallback({ amount: Number(first.amount), label: first.label });
+    }
   };
 
   if (loading) {
@@ -174,7 +270,6 @@ export default function QuoteView() {
     );
   }
 
-  // Expired/revoked token error - friendly message
   if (errorCode === "TOKEN_EXPIRED" || errorCode === "TOKEN_REVOKED") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
@@ -195,28 +290,213 @@ export default function QuoteView() {
     );
   }
 
-  if (error || !quote) {
+  if (error && !quote) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center">
             <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
             <h1 className="text-xl font-bold mb-2">Quote Not Available</h1>
-            <p className="text-muted-foreground">{error || "This quote could not be found."}</p>
+            <p className="text-muted-foreground">{error}</p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
+  if (!quote) return null;
+
   const brandHue = quote.company?.trade ? tradeColors[quote.company.trade] : "215 16% 47%";
-  const brandName = quote.company?.trade ? tradeNames[quote.company.trade] : "QuoteSorted";
+  const brandName = quote.company?.trade ? tradeNames[quote.company.trade] : "QuoteReady";
   const isResolved = quote.status === "accepted" || quote.status === "declined";
+  const stripeConnected = quote.company?.stripe_connect_status === "active";
+
+  const bookingAmount = Number(quote.booking_payment_amount || 0);
+  const remainder = Math.max(quote.total - bookingAmount, 0);
+
+  // Customer-facing payment text
+  const renderPaymentTerms = () => {
+    if (quote.payment_mode === "completion") {
+      return (
+        <p className="text-sm text-muted-foreground">
+          Payment due on completion. Invoice will be sent on the day work finishes.
+        </p>
+      );
+    }
+    if (quote.payment_mode === "booking") {
+      return (
+        <p className="text-sm">
+          To secure your booking and cover materials, a payment of{" "}
+          <strong>{formatCurrency(bookingAmount)}</strong> is due on acceptance.
+          Balance of <strong>{formatCurrency(remainder)}</strong> due on completion.
+        </p>
+      );
+    }
+    if (quote.payment_mode === "staged" && quote.staged_payments?.length) {
+      return (
+        <div className="space-y-2">
+          <div className="text-sm font-medium">Payment plan</div>
+          <div className="rounded-md border border-border overflow-hidden">
+            {quote.staged_payments.map((s, i) => {
+              const matched = quote.payments.find(
+                (p) => p.stage_label === s.label && p.status === "paid"
+              );
+              return (
+                <div
+                  key={i}
+                  className={`flex items-center justify-between px-3 py-2 text-sm ${
+                    i > 0 ? "border-t border-border" : ""
+                  } ${matched ? "bg-green-50 dark:bg-green-950/20" : ""}`}
+                >
+                  <div className="flex items-center gap-2">
+                    {matched ? (
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    <span>{s.label}</span>
+                    {matched && (
+                      <Badge variant="outline" className="text-xs">Paid</Badge>
+                    )}
+                  </div>
+                  <div className="font-medium">{formatCurrency(Number(s.amount))}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+    if (quote.payment_mode === "account") {
+      return (
+        <p className="text-sm">
+          Invoice terms: <strong>{quote.payment_terms_days || 14} days</strong> from
+          completion.
+        </p>
+      );
+    }
+    return null;
+  };
+
+  // Accept action depends on mode
+  const renderAcceptArea = () => {
+    if (isResolved) return null;
+    if (quote.payment_mode === "completion" || quote.payment_mode === "account") {
+      return (
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            size="lg"
+            className="flex-1 bg-green-600 hover:bg-green-700 h-14 text-lg"
+            onClick={markAcceptedNoPayment}
+            disabled={responding}
+          >
+            {responding ? (
+              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+            ) : (
+              <Check className="w-5 h-5 mr-2" />
+            )}
+            Accept quote
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground h-14"
+            onClick={handleDecline}
+            disabled={responding}
+          >
+            <X className="w-5 h-5 mr-2" />
+            Decline
+          </Button>
+        </div>
+      );
+    }
+    if (quote.payment_mode === "booking") {
+      return (
+        <div className="space-y-3">
+          <Button
+            size="lg"
+            className="w-full h-14 text-base"
+            style={{ backgroundColor: `hsl(${brandHue})` }}
+            onClick={acceptBookingPayment}
+            disabled={responding}
+          >
+            {responding ? (
+              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+            ) : (
+              <Wallet className="w-5 h-5 mr-2" />
+            )}
+            Accept &amp; pay {formatCurrency(bookingAmount)}
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            onClick={handleDecline}
+            disabled={responding}
+          >
+            <X className="w-4 h-4 mr-2" />
+            Decline
+          </Button>
+          {!stripeConnected && (
+            <p className="text-xs text-center text-muted-foreground">
+              Payment by bank transfer — details shown after acceptance.
+            </p>
+          )}
+        </div>
+      );
+    }
+    if (quote.payment_mode === "staged") {
+      const first = (quote.staged_payments || [])[0];
+      return (
+        <div className="space-y-3">
+          <Button
+            size="lg"
+            className="w-full h-14 text-base"
+            style={{ backgroundColor: `hsl(${brandHue})` }}
+            onClick={acceptFirstStaged}
+            disabled={responding || !first}
+          >
+            {responding ? (
+              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+            ) : (
+              <Wallet className="w-5 h-5 mr-2" />
+            )}
+            Accept &amp; pay {first ? formatCurrency(Number(first.amount)) : ""} ({first?.label})
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            onClick={handleDecline}
+            disabled={responding}
+          >
+            <X className="w-4 h-4 mr-2" />
+            Decline
+          </Button>
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-muted/30 py-8 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header with branding */}
+        {justPaid && (
+          <Card className="border-green-500 bg-green-50 dark:bg-green-950/20">
+            <CardContent className="pt-4 pb-4 flex items-center gap-3">
+              <CheckCircle2 className="w-6 h-6 text-green-600" />
+              <div>
+                <p className="font-semibold text-green-800 dark:text-green-300">
+                  Payment received
+                </p>
+                <p className="text-sm text-green-700 dark:text-green-400">
+                  Thanks — {quote.company?.business_name} has been notified.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Header */}
         <div
           className="rounded-xl p-6 text-white"
           style={{ backgroundColor: `hsl(${brandHue})` }}
@@ -357,18 +637,65 @@ export default function QuoteView() {
           </CardContent>
         </Card>
 
+        {/* Payment terms / plan */}
+        <Card>
+          <CardContent className="pt-6">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <Wallet className="w-4 h-4 text-muted-foreground" />
+              Payment
+            </h3>
+            {renderPaymentTerms()}
+          </CardContent>
+        </Card>
+
         {/* Notes */}
         {quote.notes && (
           <Card>
             <CardContent className="pt-6">
-              <h3 className="font-semibold mb-2">Notes & Terms</h3>
+              <h3 className="font-semibold mb-2">Notes &amp; Terms</h3>
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{quote.notes}</p>
             </CardContent>
           </Card>
         )}
 
-        {/* Response status or buttons */}
-        {isResolved ? (
+        {/* Bank fallback after acceptance */}
+        {bankFallback && (
+          <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+            <CardContent className="pt-6 space-y-2">
+              <div className="flex items-center gap-2">
+                <Landmark className="w-5 h-5 text-amber-700" />
+                <h3 className="font-semibold text-amber-900 dark:text-amber-200">
+                  Pay {formatCurrency(bankFallback.amount)} by bank transfer
+                </h3>
+              </div>
+              <p className="text-sm text-amber-900 dark:text-amber-200">
+                Your {bankFallback.label} of{" "}
+                <strong>{formatCurrency(bankFallback.amount)}</strong> is due before work
+                starts. Please transfer to:
+              </p>
+              <div className="grid grid-cols-2 gap-3 text-sm bg-background rounded-md p-3 border border-amber-200">
+                <div>
+                  <div className="text-xs text-muted-foreground">Sort code</div>
+                  <div className="font-mono font-semibold">
+                    {quote.company?.bank_sort_code || "—"}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-muted-foreground">Account number</div>
+                  <div className="font-mono font-semibold">
+                    {quote.company?.bank_account_number || "—"}
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-amber-800 dark:text-amber-300">
+                Use reference: <strong>{quote.reference}</strong>
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Response status or accept buttons */}
+        {isResolved && !bankFallback ? (
           <Card
             className={
               quote.status === "accepted"
@@ -385,14 +712,17 @@ export default function QuoteView() {
                     </div>
                     <div>
                       <p className="font-bold text-xl text-green-700 dark:text-green-400">
-                        Quote Accepted! 🎉
+                        Quote Accepted
                       </p>
                       <p className="text-muted-foreground mt-1">
-                        Thank you for accepting this quote. {quote.company?.business_name} has been notified and will be in touch shortly.
+                        Thank you. {quote.company?.business_name} has been notified and
+                        will be in touch shortly.
                       </p>
-                      <p className="text-sm text-muted-foreground mt-3">
-                        Accepted on {formatDate(quote.accepted_at!)}
-                      </p>
+                      {quote.accepted_at && (
+                        <p className="text-sm text-muted-foreground mt-3">
+                          Accepted on {formatDate(quote.accepted_at)}
+                        </p>
+                      )}
                     </div>
                   </>
                 ) : (
@@ -403,8 +733,10 @@ export default function QuoteView() {
                     <div>
                       <p className="font-bold text-xl text-destructive">Quote Declined</p>
                       <p className="text-muted-foreground mt-1">
-                        You declined this quote on {formatDate(quote.declined_at!)}. 
-                        If you change your mind, please contact {quote.company?.business_name}.
+                        You declined this quote
+                        {quote.declined_at ? ` on ${formatDate(quote.declined_at)}` : ""}.
+                        If you change your mind, please contact{" "}
+                        {quote.company?.business_name}.
                       </p>
                     </div>
                   </>
@@ -412,51 +744,19 @@ export default function QuoteView() {
               </div>
             </CardContent>
           </Card>
-        ) : (
+        ) : !isResolved ? (
           <Card className="border-2 border-dashed border-primary/30">
-            <CardContent className="pt-6 pb-6">
-              <p className="text-center text-muted-foreground mb-4">
-                Ready to proceed with this quote?
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  size="lg"
-                  className="flex-1 bg-green-600 hover:bg-green-700 h-14 text-lg"
-                  onClick={() => handleResponse("accept")}
-                  disabled={responding}
-                >
-                  {responding ? (
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  ) : (
-                    <Check className="w-5 h-5 mr-2" />
-                  )}
-                  Accept Quote
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="flex-1 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground h-14"
-                  onClick={() => handleResponse("decline")}
-                  disabled={responding}
-                >
-                  {responding ? (
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  ) : (
-                    <X className="w-5 h-5 mr-2" />
-                  )}
-                  Decline
-                </Button>
-              </div>
-              <p className="text-xs text-center text-muted-foreground mt-4">
-                By accepting, you agree to proceed with the work as quoted
+            <CardContent className="pt-6 pb-6 space-y-4">
+              {renderAcceptArea()}
+              <p className="text-xs text-center text-muted-foreground">
+                By accepting, you agree to proceed with the work as quoted.
               </p>
             </CardContent>
           </Card>
-        )}
+        ) : null}
 
-        {/* Footer */}
         <p className="text-center text-xs text-muted-foreground py-4">
-          {brandName} — Powered by QuoteSorted
+          {brandName} — Powered by QuoteReady
         </p>
       </div>
     </div>
