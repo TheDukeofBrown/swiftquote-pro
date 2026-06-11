@@ -217,7 +217,9 @@ Deno.serve(async (req) => {
 
       const { data: company } = await supabase
         .from("companies")
-        .select("business_name, email, phone, address, trade, logo_url, vat_registered, vat_rate")
+        .select(
+          "business_name, email, phone, address, trade, logo_url, vat_registered, vat_rate, stripe_connect_status, bank_sort_code, bank_account_number"
+        )
         .eq("id", quote.company_id)
         .single();
 
@@ -227,13 +229,19 @@ Deno.serve(async (req) => {
         .eq("quote_id", quoteId)
         .order("sort_order");
 
+      const { data: payments } = await supabase
+        .from("quote_payments")
+        .select("id, stage_label, amount, status, paid_at")
+        .eq("quote_id", quoteId)
+        .order("created_at");
+
       // Mark as viewed if not already
       if (!quote.viewed_at && quote.status === "sent") {
         await supabase
           .from("quotes")
           .update({ viewed_at: new Date().toISOString(), status: "viewed" })
           .eq("id", quoteId);
-        
+
         await logQuoteEvent(supabase, quote.company_id, quoteId, "viewed", {
           viewed_at: new Date().toISOString(),
           previous_status: quote.status,
@@ -255,12 +263,20 @@ Deno.serve(async (req) => {
           status: quote.status,
           accepted_at: quote.accepted_at,
           declined_at: quote.declined_at,
+          payment_mode: quote.payment_mode,
+          payment_terms_days: quote.payment_terms_days,
+          booking_payment_type: quote.booking_payment_type,
+          booking_payment_value: quote.booking_payment_value,
+          booking_payment_amount: quote.booking_payment_amount,
+          staged_payments: quote.staged_payments,
           company: company || null,
           items: items || [],
+          payments: payments || [],
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
 
     // POST - Accept or decline quote
     if (req.method === "POST") {
