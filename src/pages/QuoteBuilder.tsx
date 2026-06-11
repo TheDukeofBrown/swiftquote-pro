@@ -118,6 +118,15 @@ export default function QuoteBuilder() {
     setJobAddress(quote.job_address || "");
     setNotes(quote.notes || "");
 
+    setPaymentSchedule({
+      payment_mode: (quote.payment_mode as PaymentScheduleValue["payment_mode"]) || "completion",
+      payment_terms_days: quote.payment_terms_days,
+      booking_payment_type: quote.booking_payment_type as PaymentScheduleValue["booking_payment_type"],
+      booking_payment_value: quote.booking_payment_value ? Number(quote.booking_payment_value) : null,
+      booking_payment_amount: quote.booking_payment_amount ? Number(quote.booking_payment_amount) : null,
+      staged_payments: (quote.staged_payments as PaymentScheduleValue["staged_payments"]) || null,
+    });
+
     const { data: quoteItems } = await supabase
       .from("quote_items")
       .select("*")
@@ -141,6 +150,7 @@ export default function QuoteBuilder() {
 
     setLoading(false);
   };
+
 
   const createEmptyItem = (sortOrder: number): QuoteItem => ({
     description: "",
