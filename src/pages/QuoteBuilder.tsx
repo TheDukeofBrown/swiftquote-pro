@@ -62,6 +62,15 @@ export default function QuoteBuilder() {
   const [items, setItems] = useState<QuoteItem[]>([]);
   const [quoteId, setQuoteId] = useState<string | null>(id || null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleValue>({
+    payment_mode: "completion",
+    payment_terms_days: null,
+    booking_payment_type: null,
+    booking_payment_value: null,
+    booking_payment_amount: null,
+    staged_payments: null,
+  });
+
 
   // Calculate totals
   const regularItems = items.filter(item => !item.is_uplift);
