@@ -17,8 +17,9 @@ import { UsageDisplay } from "@/components/UsageDisplay";
 import { LogoUpload } from "@/components/LogoUpload";
 import { PriceLibrarySettings } from "@/components/PriceLibrarySettings";
 import { PLANS, getPlanInfo } from "@/config/plans";
-import { ArrowLeft, Loader2, Save, LogOut, Check, Crown, Zap, Clock, Library } from "lucide-react";
+import { ArrowLeft, Loader2, Save, LogOut, Check, Crown, Zap, Clock, Library, Wallet, Landmark, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -38,6 +39,12 @@ export default function Settings() {
   const [labourRate, setLabourRate] = useState(String(company?.default_labour_rate || 45));
   const [vatRegistered, setVatRegistered] = useState(company?.vat_registered || false);
   const [vatRate, setVatRate] = useState(String(company?.vat_rate || 20));
+  const [materialsThreshold, setMaterialsThreshold] = useState(String(company?.materials_threshold ?? 500));
+  const [bankSortCode, setBankSortCode] = useState(company?.bank_sort_code || "");
+  const [bankAccountNumber, setBankAccountNumber] = useState(company?.bank_account_number || "");
+  const [connecting, setConnecting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
 
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -65,20 +72,64 @@ export default function Settings() {
       if (error) throw error;
 
       await refetch();
-      toast({
-        title: "Settings saved",
-        description: "Your business details have been updated.",
-      });
+      toast({ title: "Settings saved", description: "Your business details have been updated." });
     } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err.message || "Failed to save settings",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: err.message || "Failed to save settings", variant: "destructive" });
     } finally {
       setSaving(false);
     }
   };
+
+  const handlePaymentsSave = async () => {
+    if (!company) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("companies")
+        .update({
+          materials_threshold: parseFloat(materialsThreshold) || 500,
+          bank_sort_code: bankSortCode.trim() || null,
+          bank_account_number: bankAccountNumber.trim() || null,
+        })
+        .eq("id", company.id);
+      if (error) throw error;
+      await refetch();
+      toast({ title: "Payment settings saved" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to save", variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleConnectStripe = async () => {
+    setConnecting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-connect-onboard", {
+        body: { return_url: `${window.location.origin}/settings?tab=payments` },
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (err: any) {
+      toast({ title: "Could not start Stripe onboarding", description: err.message, variant: "destructive" });
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  const handleRefreshStripeStatus = async () => {
+    setRefreshing(true);
+    try {
+      await supabase.functions.invoke("stripe-connect-status", { body: {} });
+      await refetch();
+      toast({ title: "Status refreshed" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
 
   const handleSignOut = async () => {
     await signOut();
@@ -107,20 +158,31 @@ export default function Settings() {
               Save
             </Button>
           )}
+          {activeTab === "payments" && (
+            <Button size="sm" onClick={handlePaymentsSave} disabled={saving}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+              Save
+            </Button>
+          )}
         </div>
       </header>
 
       <main className="container py-6 max-w-3xl">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 flex-wrap h-auto">
             <TabsTrigger value="business">Business</TabsTrigger>
             <TabsTrigger value="library" className="gap-1">
               <Library className="w-4 h-4" />
               Price Library
             </TabsTrigger>
+            <TabsTrigger value="payments" className="gap-1">
+              <Wallet className="w-4 h-4" />
+              Payments
+            </TabsTrigger>
             <TabsTrigger value="billing">Billing</TabsTrigger>
             <TabsTrigger value="account">Account</TabsTrigger>
           </TabsList>
+
 
           {/* Business Settings Tab */}
           <TabsContent value="business" className="space-y-6">
@@ -236,7 +298,125 @@ export default function Settings() {
             <PriceLibrarySettings />
           </TabsContent>
 
-          {/* Billing Tab */}
+          {/* Payments Tab */}
+          <TabsContent value="payments" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="w-5 h-5" />
+                  Stripe Connect
+                </CardTitle>
+                <CardDescription>
+                  Take booking payments and staged payments straight into your bank account.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between rounded-md border border-border p-3">
+                  <div>
+                    <div className="text-sm font-medium">Status</div>
+                    <div className="text-xs text-muted-foreground">
+                      {company?.stripe_connect_status === "active"
+                        ? "Connected and ready to accept payments"
+                        : company?.stripe_connect_status === "pending"
+                        ? "Onboarding in progress — finish on Stripe to activate"
+                        : "Not connected"}
+                    </div>
+                  </div>
+                  <Badge
+                    variant={
+                      company?.stripe_connect_status === "active"
+                        ? "default"
+                        : company?.stripe_connect_status === "pending"
+                        ? "secondary"
+                        : "outline"
+                    }
+                    className="capitalize"
+                  >
+                    {company?.stripe_connect_status || "not_connected"}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={handleConnectStripe} disabled={connecting}>
+                    {connecting ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <ExternalLink className="w-4 h-4 mr-1" />
+                    )}
+                    {company?.stripe_connect_status === "active"
+                      ? "Manage Stripe account"
+                      : company?.stripe_connect_status === "pending"
+                      ? "Continue onboarding"
+                      : "Connect Stripe"}
+                  </Button>
+                  {company?.stripe_account_id && (
+                    <Button variant="outline" onClick={handleRefreshStripeStatus} disabled={refreshing}>
+                      {refreshing && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+                      Refresh status
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Smart booking suggestion</CardTitle>
+                <CardDescription>
+                  When materials on a quote exceed this amount, we'll suggest taking a
+                  booking payment.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Label htmlFor="materialsThreshold">Suggest booking payment when materials exceed (£)</Label>
+                <Input
+                  id="materialsThreshold"
+                  type="number"
+                  min="0"
+                  step="50"
+                  value={materialsThreshold}
+                  onChange={(e) => setMaterialsThreshold(e.target.value)}
+                  className="max-w-[200px] mt-2"
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Landmark className="w-5 h-5" />
+                  Bank transfer fallback
+                </CardTitle>
+                <CardDescription>
+                  Shown to customers when Stripe is not connected and they accept a
+                  quote with a booking payment.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="sortCode">Sort code</Label>
+                    <Input
+                      id="sortCode"
+                      placeholder="00-00-00"
+                      value={bankSortCode}
+                      onChange={(e) => setBankSortCode(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="accountNumber">Account number</Label>
+                    <Input
+                      id="accountNumber"
+                      placeholder="12345678"
+                      value={bankAccountNumber}
+                      onChange={(e) => setBankAccountNumber(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+
           <TabsContent value="billing" className="space-y-6">
             {/* Current Plan & Usage */}
             <UsageDisplay />

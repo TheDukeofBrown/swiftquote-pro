@@ -13,6 +13,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { useToast } from "@/hooks/use-toast";
 import { PriceLibraryPanel } from "@/components/PriceLibraryPanel";
 import {
+  PaymentScheduleSection,
+  type PaymentScheduleValue,
+} from "@/components/PaymentScheduleSection";
+import {
   ArrowLeft,
   Plus,
   Trash2,
@@ -23,6 +27,7 @@ import {
   Zap,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+
 
 type QuoteItem = {
   id?: string;
@@ -57,6 +62,15 @@ export default function QuoteBuilder() {
   const [items, setItems] = useState<QuoteItem[]>([]);
   const [quoteId, setQuoteId] = useState<string | null>(id || null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [paymentSchedule, setPaymentSchedule] = useState<PaymentScheduleValue>({
+    payment_mode: "completion",
+    payment_terms_days: null,
+    booking_payment_type: null,
+    booking_payment_value: null,
+    booking_payment_amount: null,
+    staged_payments: null,
+  });
+
 
   // Calculate totals
   const regularItems = items.filter(item => !item.is_uplift);
@@ -73,6 +87,11 @@ export default function QuoteBuilder() {
   const vatRate = company?.vat_registered ? Number(company.vat_rate) : 0;
   const vatAmount = subtotalWithUplift * (vatRate / 100);
   const total = subtotalWithUplift + vatAmount;
+  const materialsTotal = regularItems
+    .filter((it) => it.item_type === "materials")
+    .reduce((s, it) => s + it.line_total, 0);
+  const materialsThreshold = Number(company?.materials_threshold || 500);
+
 
   // Load existing quote if editing
   useEffect(() => {
@@ -104,6 +123,15 @@ export default function QuoteBuilder() {
     setJobAddress(quote.job_address || "");
     setNotes(quote.notes || "");
 
+    setPaymentSchedule({
+      payment_mode: (quote.payment_mode as PaymentScheduleValue["payment_mode"]) || "completion",
+      payment_terms_days: quote.payment_terms_days,
+      booking_payment_type: quote.booking_payment_type as PaymentScheduleValue["booking_payment_type"],
+      booking_payment_value: quote.booking_payment_value ? Number(quote.booking_payment_value) : null,
+      booking_payment_amount: quote.booking_payment_amount ? Number(quote.booking_payment_amount) : null,
+      staged_payments: (quote.staged_payments as unknown as PaymentScheduleValue["staged_payments"]) || null,
+    });
+
     const { data: quoteItems } = await supabase
       .from("quote_items")
       .select("*")
@@ -127,6 +155,7 @@ export default function QuoteBuilder() {
 
     setLoading(false);
   };
+
 
   const createEmptyItem = (sortOrder: number): QuoteItem => ({
     description: "",
@@ -220,6 +249,22 @@ export default function QuoteBuilder() {
       return;
     }
 
+    // Validate staged payment totals
+    if (paymentSchedule.payment_mode === "staged") {
+      const sum = (paymentSchedule.staged_payments || []).reduce(
+        (s, x) => s + (Number(x.percent) || 0),
+        0
+      );
+      if (Math.abs(sum - 100) > 0.01) {
+        toast({
+          title: "Staged payments don't balance",
+          description: `Stages must add up to 100%. Currently ${sum.toFixed(0)}%.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       let currentQuoteId = quoteId;
@@ -229,8 +274,47 @@ export default function QuoteBuilder() {
       const finalVat = vatAmount;
       const finalTotal = total;
 
+      // Recalculate booking amount against final total
+      const finalSchedule: PaymentScheduleValue = { ...paymentSchedule };
+      if (finalSchedule.payment_mode === "booking") {
+        const v = Number(finalSchedule.booking_payment_value || 0);
+        finalSchedule.booking_payment_amount =
+          finalSchedule.booking_payment_type === "fixed"
+            ? Math.min(v, finalTotal)
+            : Math.round(((finalTotal * v) / 100) * 100) / 100;
+      }
+      if (finalSchedule.payment_mode === "staged" && finalSchedule.staged_payments) {
+        finalSchedule.staged_payments = finalSchedule.staged_payments.map((s) => ({
+          ...s,
+          amount: Math.round(((finalTotal * (Number(s.percent) || 0)) / 100) * 100) / 100,
+        }));
+      }
+
+      const paymentFields = {
+        payment_mode: finalSchedule.payment_mode,
+        payment_terms_days:
+          finalSchedule.payment_mode === "account"
+            ? finalSchedule.payment_terms_days || 14
+            : null,
+        booking_payment_type:
+          finalSchedule.payment_mode === "booking"
+            ? finalSchedule.booking_payment_type || "percent"
+            : null,
+        booking_payment_value:
+          finalSchedule.payment_mode === "booking"
+            ? finalSchedule.booking_payment_value || 0
+            : null,
+        booking_payment_amount:
+          finalSchedule.payment_mode === "booking"
+            ? finalSchedule.booking_payment_amount || 0
+            : null,
+        staged_payments:
+          finalSchedule.payment_mode === "staged"
+            ? (finalSchedule.staged_payments as unknown as never)
+            : null,
+      };
+
       if (currentQuoteId) {
-        // Update existing quote
         const { error } = await supabase
           .from("quotes")
           .update({
@@ -241,15 +325,13 @@ export default function QuoteBuilder() {
             subtotal: finalSubtotal,
             vat_amount: finalVat,
             total: finalTotal,
+            ...paymentFields,
           })
           .eq("id", currentQuoteId);
 
         if (error) throw error;
-
-        // Delete existing items and insert new ones
         await supabase.from("quote_items").delete().eq("quote_id", currentQuoteId);
       } else {
-        // Create new quote
         const { data: newQuote, error } = await supabase
           .from("quotes")
           .insert({
@@ -261,8 +343,9 @@ export default function QuoteBuilder() {
             subtotal: finalSubtotal,
             vat_amount: finalVat,
             total: finalTotal,
-            reference: "", // Will be auto-generated by trigger
+            reference: "",
             status: "draft",
+            ...paymentFields,
           })
           .select()
           .single();
@@ -271,6 +354,7 @@ export default function QuoteBuilder() {
         currentQuoteId = newQuote.id;
         setQuoteId(currentQuoteId);
       }
+
 
       // Insert items (convert uplift items to regular line items with calculated amount)
       const itemsToInsert = validItems.map((item, index) => {
@@ -585,7 +669,17 @@ export default function QuoteBuilder() {
           </CardContent>
         </Card>
 
+        {/* Payment schedule */}
+        <PaymentScheduleSection
+          value={paymentSchedule}
+          onChange={setPaymentSchedule}
+          total={total}
+          materialsTotal={materialsTotal}
+          materialsThreshold={materialsThreshold}
+        />
+
         {/* Totals */}
+
         <Card className="animate-fade-in" style={{ animationDelay: "0.2s" }}>
           <CardContent className="pt-4 pb-4">
             <div className="space-y-2">

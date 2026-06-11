@@ -839,7 +839,7 @@ export type Database = {
     Enums: {
       admin_role: "super_admin" | "admin" | "support"
       booking_payment_type: "percent" | "fixed"
-      payment_mode: "none" | "booking" | "staged" | "account"
+      payment_mode: "completion" | "booking" | "staged" | "account"
       price_item_type: "labour" | "material" | "service" | "uplift"
       price_item_unit: "each" | "hour" | "percent" | "metre" | "day"
       quote_payment_status: "pending" | "paid"
@@ -988,7 +988,7 @@ export const Constants = {
     Enums: {
       admin_role: ["super_admin", "admin", "support"],
       booking_payment_type: ["percent", "fixed"],
-      payment_mode: ["none", "booking", "staged", "account"],
+      payment_mode: ["completion", "booking", "staged", "account"],
       price_item_type: ["labour", "material", "service", "uplift"],
       price_item_unit: ["each", "hour", "percent", "metre", "day"],
       quote_payment_status: ["pending", "paid"],

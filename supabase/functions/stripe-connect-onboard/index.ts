@@ -1,12 +1,13 @@
-// Stripe Connect onboarding — Accounts v2, direct charges, fees on connected account
-// Uses hosted onboarding via accountLinks.create. No OAuth / no client_id.
+// Stripe Connect onboarding — Accounts v2, direct charges, fees on connected account.
+// Hosted onboarding via accountLinks.create. No OAuth, no client_id.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 const log = (s: string, d?: unknown) =>
@@ -39,14 +40,14 @@ serve(async (req) => {
     const user = userData.user;
 
     const body = await req.json().catch(() => ({}));
-    const returnUrl: string = body.return_url || `${req.headers.get("origin") || ""}/settings`;
+    const returnUrl: string =
+      body.return_url || `${req.headers.get("origin") || ""}/settings?tab=payments`;
     const refreshUrl: string = body.refresh_url || returnUrl;
 
-    // Find company for this user
     const { data: company, error: cErr } = await supa
       .from("companies")
-      .select("id, stripe_account_id, stripe_connect_status, name, email")
-      .eq("owner_id", user.id)
+      .select("id, stripe_account_id, stripe_connect_status, business_name, email")
+      .eq("user_id", user.id)
       .maybeSingle();
     if (cErr) throw cErr;
     if (!company) throw new Error("No company for user");
@@ -56,8 +57,6 @@ serve(async (req) => {
     let accountId = company.stripe_account_id as string | null;
 
     if (!accountId) {
-      // Accounts v2 style: controller config for direct charges,
-      // Stripe collects fees from the connected account, Stripe-hosted dashboard + onboarding.
       const account = await stripe.accounts.create({
         controller: {
           stripe_dashboard: { type: "full" },
@@ -72,7 +71,7 @@ serve(async (req) => {
           transfers: { requested: true },
         },
         business_profile: {
-          name: company.name || undefined,
+          name: company.business_name || undefined,
         },
         metadata: { company_id: company.id, user_id: user.id },
       });
@@ -88,7 +87,6 @@ serve(async (req) => {
       log("Account created", { accountId });
     }
 
-    // Hosted onboarding link
     const link = await stripe.accountLinks.create({
       account: accountId,
       refresh_url: refreshUrl,
