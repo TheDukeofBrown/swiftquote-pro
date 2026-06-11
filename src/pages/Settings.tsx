@@ -158,20 +158,31 @@ export default function Settings() {
               Save
             </Button>
           )}
+          {activeTab === "payments" && (
+            <Button size="sm" onClick={handlePaymentsSave} disabled={saving}>
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+              Save
+            </Button>
+          )}
         </div>
       </header>
 
       <main className="container py-6 max-w-3xl">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 flex-wrap h-auto">
             <TabsTrigger value="business">Business</TabsTrigger>
             <TabsTrigger value="library" className="gap-1">
               <Library className="w-4 h-4" />
               Price Library
             </TabsTrigger>
+            <TabsTrigger value="payments" className="gap-1">
+              <Wallet className="w-4 h-4" />
+              Payments
+            </TabsTrigger>
             <TabsTrigger value="billing">Billing</TabsTrigger>
             <TabsTrigger value="account">Account</TabsTrigger>
           </TabsList>
+
 
           {/* Business Settings Tab */}
           <TabsContent value="business" className="space-y-6">
