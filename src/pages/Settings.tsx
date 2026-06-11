@@ -39,6 +39,12 @@ export default function Settings() {
   const [labourRate, setLabourRate] = useState(String(company?.default_labour_rate || 45));
   const [vatRegistered, setVatRegistered] = useState(company?.vat_registered || false);
   const [vatRate, setVatRate] = useState(String(company?.vat_rate || 20));
+  const [materialsThreshold, setMaterialsThreshold] = useState(String(company?.materials_threshold ?? 500));
+  const [bankSortCode, setBankSortCode] = useState(company?.bank_sort_code || "");
+  const [bankAccountNumber, setBankAccountNumber] = useState(company?.bank_account_number || "");
+  const [connecting, setConnecting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
 
   useEffect(() => {
     const tab = searchParams.get("tab");
